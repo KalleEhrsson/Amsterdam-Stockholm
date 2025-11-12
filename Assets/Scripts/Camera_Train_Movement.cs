@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,48 +9,49 @@ public class Camera_Train_Movement : MonoBehaviour
     [SerializeField] private Transform trainposistion;
 
     [Header("Movement Settings")]
-    [SerializeField] private float cameraSpeed = 1.0f;
+    [SerializeField] private float cameraSpeed;
     private Vector3 offset;
     private Vector3 smoothVelocity = Vector3.zero;
 
     [Header("Mouse Control Settings")]
-    [SerializeField] private float mousesmoothing = 2.0f;
+    [SerializeField] private float mousesmoothing;
 
-    [Header("Rotation Limits")]
-    private float mouseX;
-    private float mouseY;
-    private float rotationY = 4.0f;
-    private float rotationX = 4.0f;
+    [Header("Rotation Limits (Turning Radius)")]
+    [SerializeField] private float maxHorizontalAngle; // Left-right turn limit
+    [SerializeField] private float maxVerticalAngle;   // Up-down turn limit
+
+    private float yaw;   // horizontal rotation
+    private float pitch; // vertical rotation
 
     private void Start()
     {
         offset = cameraposistion.position - trainposistion.position;
-        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.lockState = CursorLockMode.None;
     }
-
-    #region trainmovement region
 
     private void Update()
     {
-        //mousesmoothing = PlayerPrefs.GetFloat("Mouse_Sensitivity", 2.0f);
         if (Mouse.current != null)
         {
-            mouseX += Mouse.current.delta.x.ReadValue() * mousesmoothing * Time.deltaTime;
-            mouseY -= Mouse.current.delta.y.ReadValue() * mousesmoothing * Time.deltaTime;
-            mouseY = Mathf.Clamp(mouseY, -20, 20);
+            yaw += Mouse.current.delta.x.ReadValue() * mousesmoothing;
+            pitch -= Mouse.current.delta.y.ReadValue() * mousesmoothing;
+
+            // Clamp rotation angles to define turning radius
+            yaw = Mathf.Clamp(yaw, -maxHorizontalAngle, maxHorizontalAngle);
+            pitch = Mathf.Clamp(pitch, -maxVerticalAngle, maxVerticalAngle);
         }
 
-
-        Quaternion camerarotation = Quaternion.Euler(mouseY * rotationY, mouseX * rotationX, 0);
+        // Apply rotation to offset
+        Quaternion camerarotation = Quaternion.Euler(pitch, yaw, 0);
         Vector3 desiredPosition = trainposistion.position + camerarotation * offset;
-        cameraposistion.position = Vector3.SmoothDamp(cameraposistion.position, desiredPosition, ref smoothVelocity, cameraSpeed * Time.deltaTime);
+
+        cameraposistion.position = Vector3.SmoothDamp(
+            cameraposistion.position,
+            desiredPosition,
+            ref smoothVelocity,
+            cameraSpeed * Time.deltaTime
+        );
+
         cameraposistion.LookAt(trainposistion.position);
-
     }
-    
-
-
-    #endregion
 }
-
-

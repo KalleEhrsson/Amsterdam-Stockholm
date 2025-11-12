@@ -271,8 +271,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraTrainMovement
   cameraposistion: {fileID: 330585546}
   trainposistion: {fileID: 1187490828}
-  cameraSpeed: 0.01
-  mousesmoothing: 2
+  cameraSpeed: 0.4
+  mousesmoothing: 0.1
+  maxHorizontalAngle: 15
+  maxVerticalAngle: 5
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
