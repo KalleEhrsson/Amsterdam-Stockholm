@@ -17,11 +17,11 @@ public class Camera_Train_Movement : MonoBehaviour
     [SerializeField] private float mousesmoothing;
 
     [Header("Rotation Limits (Turning Radius)")]
-    [SerializeField] private float maxHorizontalAngle; // Left-right turn limit
-    [SerializeField] private float maxVerticalAngle;   // Up-down turn limit
+    [SerializeField] private float maxHorizontalAngle;
+    [SerializeField] private float maxVerticalAngle;
 
-    private float yaw;   // horizontal rotation
-    private float pitch; // vertical rotation
+    private float yaw;
+    private float pitch;
 
     private void Start()
     {
@@ -36,12 +36,10 @@ public class Camera_Train_Movement : MonoBehaviour
             yaw += Mouse.current.delta.x.ReadValue() * mousesmoothing;
             pitch -= Mouse.current.delta.y.ReadValue() * mousesmoothing;
 
-            // Clamp rotation angles to define turning radius
             yaw = Mathf.Clamp(yaw, -maxHorizontalAngle, maxHorizontalAngle);
             pitch = Mathf.Clamp(pitch, -maxVerticalAngle, maxVerticalAngle);
         }
 
-        // Apply rotation to offset
         Quaternion camerarotation = Quaternion.Euler(pitch, yaw, 0);
         Vector3 desiredPosition = trainposistion.position + camerarotation * offset;
 
