@@ -1,19 +1,20 @@
+using System.Collections;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float jumpForce = 7f;
+    [SerializeField] float moveSpeed = 3f;
+    [SerializeField] float jumpForce = 5f;
 
     [Header("Ground Settings")]
-    [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundDistance = 0.2f;
+    [SerializeField] LayerMask groundLayer;
+    [SerializeField] Transform groundCheck;
+    [SerializeField] float groundDistance = 0.2f;
 
     [Header("Jump Timing")]
-    [SerializeField] private float jumpBufferTime = 0.15f;
-    [SerializeField] private float coyoteTime = 0.1f;
+    [SerializeField] float jumpBufferTime = 0.15f;
+    [SerializeField] float coyoteTime = 0.1f;
 
     Rigidbody rb;
     bool isGrounded;
@@ -27,14 +28,10 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetButtonDown("Jump"))
-        {
-            jumpBufferCounter = jumpBufferTime;
-        }
-        else
-        { 
-            jumpBufferCounter -= Time.deltaTime;
-        }
+        jumpBufferCounter = Input.GetButtonDown("Jump")
+            ? jumpBufferTime
+            : Mathf.Max(jumpBufferCounter - Time.deltaTime, 0f);
+        
     }
     
     void FixedUpdate()
