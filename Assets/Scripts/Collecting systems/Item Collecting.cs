@@ -12,6 +12,15 @@ public class ItemCollecting : MonoBehaviour
         {
             itemObject = this.gameObject;
         }
+        
     }
-    
+    void OnMouseDown()
+    {
+        if (!isCollected)
+        {
+            isCollected = true;
+            itemObject.SetActive(false);
+        }
+    }
+
 }

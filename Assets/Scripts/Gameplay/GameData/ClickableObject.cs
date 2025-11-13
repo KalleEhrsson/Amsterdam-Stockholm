@@ -20,13 +20,6 @@ public class ClickableObject : MonoBehaviour
     {
         meshR = gameObject.GetComponent<MeshRenderer>();
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void OnMouseEnter()
     {
         meshR.SetMaterials(outlineMaterials);
