@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
@@ -7,6 +8,7 @@ public class Movement : MonoBehaviour
     [SerializeField] float moveSpeed = 3f;
     [SerializeField] float jumpForce = 5f;
     [SerializeField] float moveSpeedRuntime;
+    [SerializeField] float externalSpeedMultiplier = 1f;
     float moveVelocity;
 
     [Header("Ground Settings")]
@@ -51,28 +53,29 @@ public class Movement : MonoBehaviour
     Vector3 originalCenter;
     Vector3 visualScaleOriginal;
     Vector3 visualScaleCrouched;
+
+    // slow system
+    float baseSpeedRuntime;
+    float slowMultiplierTotal = 1f;
+    List<float> activeSlows = new List<float>();
     
     void Start()
     {
         rb  = GetComponent<Rigidbody>();
         col = GetComponent<CapsuleCollider>();
 
+        baseSpeedRuntime = moveSpeed;
         moveSpeedRuntime = moveSpeed;
         
         #region Crouch Calculations
         originalHeight = col.height;
         originalCenter = col.center;
 
-        // bottom = center - half height
         originalBottom = originalCenter.y - originalHeight * 0.5f;
-
-        // collider shrink factor
         crouchedHeight = originalHeight * 0.6f;
 
-        // speed shrink factor
         crouchSpeed = moveSpeed / 2f;
 
-        // visual scaling (the child only)
         visualScaleOriginal = visual.localScale;
         visualScaleCrouched = new Vector3(
             visualScaleOriginal.x,
@@ -97,8 +100,7 @@ public class Movement : MonoBehaviour
         #region Horizontal Movement
         float moveInput = Input.GetAxis("Horizontal");
 
-        // pick speed first
-        float currentSpeed = moveSpeedRuntime;
+        float currentSpeed = moveSpeedRuntime; // slow system handles changes
 
         Vector3 move = new Vector3(moveInput * currentSpeed, rb.linearVelocity.y, 0f);
         rb.linearVelocity = move;
@@ -116,7 +118,6 @@ public class Movement : MonoBehaviour
             coyoteCounter -= Time.fixedDeltaTime;
         }
 
-        // Perform jump if buffer + ground overlap
         if (jumpBufferCounter > 0 && coyoteCounter > 0)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, 0f);
@@ -130,18 +131,16 @@ public class Movement : MonoBehaviour
             crouchLerpT += Time.fixedDeltaTime / crouchDownDuration;
             float t = Mathf.Clamp01(crouchLerpT);
 
-            // height
             col.height = Mathf.Lerp(originalHeight, crouchedHeight, t);
 
-            // lock bottom
             float newCenterY = originalBottom + col.height * 0.5f;
             col.center = new Vector3(originalCenter.x, newCenterY, originalCenter.z);
 
-            // visual
             visual.localScale = Vector3.Lerp(visualScaleOriginal, visualScaleCrouched, t);
 
-            // speed
-            moveSpeedRuntime = Mathf.Lerp(moveSpeedRuntime, crouchSpeed, t);
+            // patched for slow support
+            baseSpeedRuntime = Mathf.Lerp(baseSpeedRuntime, crouchSpeed, t);
+            ApplySlowToRuntime();
 
             if (t >= 1f)
             {
@@ -156,29 +155,28 @@ public class Movement : MonoBehaviour
             standLerpT += Time.fixedDeltaTime / standUpDuration;
             float t = Mathf.Clamp01(standLerpT);
 
-            // height
             col.height = Mathf.Lerp(crouchedHeight, originalHeight, t);
 
-            // lock bottom
             float newCenterY = originalBottom + col.height * 0.5f;
             col.center = new Vector3(originalCenter.x, newCenterY, originalCenter.z);
 
-            // visual
             visual.localScale = Vector3.Lerp(visualScaleCrouched, visualScaleOriginal, t);
 
-            // speed: respect recovery delay
             if (standSpeedRecoveryDelay > 0f)
             {
                 standSpeedRecoveryDelay -= Time.fixedDeltaTime;
             }
             else
             {
-                moveSpeedRuntime = Mathf.Lerp(moveSpeedRuntime, moveSpeed, t);
+                // patched for slow support
+                baseSpeedRuntime = Mathf.Lerp(baseSpeedRuntime, moveSpeed, t);
+                ApplySlowToRuntime();
             }
 
             if (t >= 1f && Mathf.Abs(moveSpeedRuntime - moveSpeed) < 0.01f)
             {
-                moveSpeedRuntime = moveSpeed;
+                baseSpeedRuntime = moveSpeed;
+                ApplySlowToRuntime();
                 isStandingLerping = false;
             }
         }
@@ -192,7 +190,6 @@ public class Movement : MonoBehaviour
 
         isCrouching = true;
         isStandingLerping = false;
-        isCrouchLerping = true;
         isCrouchLerping = true;
         crouchLerpT = 0f;
     }
@@ -215,7 +212,6 @@ public class Movement : MonoBehaviour
         isCrouching = false;
         isCrouchLerping = false;
         isStandingLerping = true;
-        isStandingLerping = true;
         standLerpT = 0f;
         
         standSpeedRecoveryDelay = standSpeedHoldTime;
@@ -235,10 +231,59 @@ public class Movement : MonoBehaviour
     }
     #endregion
     #endregion
-    
+
+    #region Slows
+    public void AddSlow(float multiplier, float duration)
+    {
+        StartCoroutine(StrongestSlowRoutine(multiplier, duration));
+    }
+
+    IEnumerator StrongestSlowRoutine(float multiplier, float duration)
+    {
+        // add this slow
+        activeSlows.Add(multiplier);
+        RecalculateSlows();
+
+        yield return new WaitForSeconds(duration);
+
+        // remove this slow
+        activeSlows.Remove(multiplier);
+        RecalculateSlows();
+    }
+
+    void RecalculateSlows()
+    {
+        if (activeSlows.Count == 0)
+        {
+            // no slows active
+            slowMultiplierTotal = 1f;
+        }
+        else
+        {
+            // strongest slow = lowest multiplier
+            slowMultiplierTotal = 1f;
+
+            float strongest = 1f;
+            foreach (float m in activeSlows)
+            {
+                if (m < strongest)
+                    strongest = m;
+            }
+
+            slowMultiplierTotal = strongest;
+        }
+
+        ApplySlowToRuntime();
+    }
+
+    void ApplySlowToRuntime()
+    {
+        moveSpeedRuntime = baseSpeedRuntime * slowMultiplierTotal;
+    }
+    #endregion
+
     void OnDrawGizmos()
     {
-        // Only run if we have a collider
         CapsuleCollider c = GetComponent<CapsuleCollider>();
         if (!c) return;
 
@@ -249,17 +294,21 @@ public class Movement : MonoBehaviour
         float height = c.height;
         float radius = c.radius;
 
-        // Top and bottom sphere centers
         Vector3 top = pos + Vector3.up * (height * 0.5f - radius);
         Vector3 bottom = pos - Vector3.up * (height * 0.5f - radius);
 
-        // Draw cylinder lines
+        // draw top and bottom balls
+        Gizmos.DrawWireSphere(top, radius);
+        Gizmos.DrawWireSphere(bottom, radius);
+
+        // cylinder lines
         Gizmos.DrawLine(top + Vector3.right * radius, bottom + Vector3.right * radius);
         Gizmos.DrawLine(top - Vector3.right * radius, bottom - Vector3.right * radius);
-        
-        Gizmos.color = Color.red;
 
-        // stand height
+        Gizmos.DrawLine(top + Vector3.forward * radius, bottom + Vector3.forward * radius);
+        Gizmos.DrawLine(top - Vector3.forward * radius, bottom - Vector3.forward * radius);
+
+        // stand room rays
         if (col)
         {
             Gizmos.color = Color.red;
