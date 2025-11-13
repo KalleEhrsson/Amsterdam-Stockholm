@@ -32,6 +32,9 @@ public class GameManager : MonoBehaviour
     private int level3CollectedCount;
     private bool level3Completed;
 
+    [Header("Settings")]
+    [SerializeField] private Camera_Cabin_Switch cameraCabinSwitch;
+
     void Start()
     {
         // Initialize Level 1
@@ -92,6 +95,13 @@ public class GameManager : MonoBehaviour
         {
             level1Completed = true;
             level1StatusText.text += " - Level 1 Completed!";
+
+            if (level1Completed == true)
+            {
+                cameraCabinSwitch.transistionevent();
+            }
+
+
         }
     }
     private void UpdateLevel2Status() {
