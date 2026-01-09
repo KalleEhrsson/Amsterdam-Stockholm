@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class Movement : MonoBehaviour
 {
@@ -13,6 +12,7 @@ public class Movement : MonoBehaviour
     // Expose current state for external systems
     public MovementState CurrentState => currentState;
 
+    // Inspector: movement tuning values visible in the editor
     #region Inspector: Movement
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 3f;
@@ -20,7 +20,6 @@ public class Movement : MonoBehaviour
 
     [Tooltip("Current speed after crouch and slow modifiers.")]
     [SerializeField] private float moveSpeedRuntime;
-    
 
     [Tooltip("Reserved for external systems (buffs, sprint, etc.). Not applied by default.")]
     [SerializeField] private float externalSpeedMultiplier = 1f;
@@ -28,17 +27,32 @@ public class Movement : MonoBehaviour
     private Vector3 lastWallNormal;
     private bool hasWallNormal;
     private Vector3 lastGroundNormal = Vector3.up;
+    // Steep slope runtime state
+    private bool isOnSteepSlope;
+    private float steepSlopeTimer;
+    private float lastSlopeAngleDeg;
     
-    // Events: useful for hooking VFX/sound/other systems when player lands or jumps.
+    // Events exposed for external systems (VFX, audio, animation, etc.). Prefer the C# events.
+    #region Events
     public event Action OnLand;
     public event Action OnJump;
     public event Action OnLeaveGround;
-
-    [SerializeField, HideInInspector] private UnityEvent onLand;
-    [SerializeField, HideInInspector] private UnityEvent onJump;
-    [SerializeField, HideInInspector] private UnityEvent onLeave;
+    #endregion
     #endregion
 
+    /// <summary>
+    /// Animation: read-only values consumed by the animation controller.
+    /// </summary>
+    #region Animation (Exposed)
+    public bool FacingRight { get; private set; } = true;
+    public float HorizontalInput { get; private set; } = 0f;
+    public float HorizontalSpeedNormalized { get; private set; } = 0f;
+    public float VerticalVelocity { get; private set; } = 0f;
+    #endregion
+
+    /// <summary>
+    /// Inspector: ground detection and jump timing settings
+    /// </summary>
     #region Inspector: Ground & Jump Timing
     [Header("Ground Settings")]
     [SerializeField] private LayerMask groundLayer;
@@ -61,6 +75,22 @@ public class Movement : MonoBehaviour
     [Tooltip("Small downward force applied along ground normal to keep the character stuck to slopes while walking.")]
     [SerializeField] private float groundStickForce = 5f;
     
+    [Tooltip("Maximum slope angle (in degrees) the player can 'walk' on. Slopes steeper than this will cause sliding.")]
+    [SerializeField] private float maxWalkableSlopeDegrees = 50f;
+
+    [Tooltip("Acceleration applied down the slope when standing on a slope steeper than maxWalkableSlopeDegrees.")]
+    [SerializeField] private float slopeSlideAcceleration = 9f;
+    
+    [SerializeField, Tooltip("How long (seconds) the player can still move on slopes steeper than maxWalkableSlopeDegrees before slipping.")]
+    private float steepSlopeGraceTime = 1.0f;
+    [Tooltip("Rate (units/sec) at which the player's uphill movement is reduced while pushing into an unwalkable slope.")]
+    [SerializeField] private float uphillReductionRate = 1.0f;
+
+    [Tooltip("Rate (units/sec) at which the player's uphill movement recovers when not pushing into a steep slope.")]
+    [SerializeField] private float uphillRecoveryRate = 2.0f;
+    
+    // (Debug values removed - moveSpeedRuntime now displays effective max speed)
+
     [Header("Ground Query")]
     [SerializeField, Tooltip("SphereCast distance used for ground detection.")]
     private float groundCastDistance = 0.08f;
@@ -72,6 +102,9 @@ public class Movement : MonoBehaviour
     private float groundBottomBias = 0.02f;
     #endregion
 
+    /// <summary>
+    /// Inspector: crouch-related settings (visuals, timings)
+    /// </summary>
     #region Inspector: Crouch
     [Header("Crouch Settings")]
     [Tooltip("Scaled during crouch. Defaults to this transform if not set.")]
@@ -82,27 +115,38 @@ public class Movement : MonoBehaviour
 
     [Tooltip("Delay before movement speed recovers while standing up.")]
     [SerializeField] private float standSpeedHoldTime = 0.3f;
+
+    [Tooltip("Jump height multiplier applied when jumping while crouched.")]
+    [SerializeField] private float crouchJumpMultiplier = 0.6f;
     #endregion
 
+    /// <summary>
+    /// Component references and cached geometry
+    /// </summary>
     #region Components
     private Rigidbody rb;
     private CapsuleCollider col;
     private Transform tr;
     private Vector3 cachedUp;
     private Vector3 cachedRight;
-    // Cached collider geometry (updated when collider or height changes).
     private float cachedColRadius;
     private float cachedHalfHeight;
     private float cachedBottomOffset;
     private Vector3 cachedColCenterLocal;
     #endregion
 
+    /// <summary>
+    /// Runtime jump-related timers and flags
+    /// </summary>
     #region Jump State
     private bool isGrounded;
     private float jumpBufferCounter;
     private float coyoteCounter;
     #endregion
 
+    /// <summary>
+    /// Runtime crouch state and lerp bookkeeping
+    /// </summary>
     #region Crouch State
     private float crouchSpeed;
     private float originalHeight;
@@ -122,18 +166,44 @@ public class Movement : MonoBehaviour
     private Vector3 visualScaleCrouched;
     #endregion
 
+    /// <summary>
+    /// Slow/buff system runtime state
+    /// </summary>
     #region Slow System
     private float baseSpeedRuntime;
     private float slowMultiplierTotal = 1f;
     private readonly List<float> activeSlows = new();
+    // Runtime multiplier used to gradually reduce uphill movement when on very steep slopes.
+    private float uphillSpeedMultiplier = 1f;
     #endregion
 
+    /// <summary>
+    /// Unity lifecycle methods (Awake/Start/Update/FixedUpdate)
+    /// </summary>
     #region Unity Lifecycle
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         col = GetComponent<CapsuleCollider>();
-        visual ??= transform;
+        if (visual == null)
+        {
+            if (transform.parent != null)
+            {
+                Transform sibling = transform.parent.Find("Visual");
+                if (sibling != null)
+                    visual = sibling;
+            }
+
+            if (visual == null)
+            {
+                Transform child = transform.Find("Visual");
+                if (child != null)
+                    visual = child;
+            }
+
+            visual ??= transform;
+        }
+
         tr = transform;
 
         // Initialize cached axes to avoid reading transform repeatedly.
@@ -159,8 +229,6 @@ public class Movement : MonoBehaviour
         // Keep cached transform axes fresh for methods called from Update.
         UpdateCachedTransform();
 
-        // Jump buffer makes input feel responsive:
-        // press jump slightly early and it will still trigger on landing.
         jumpBufferCounter = Input.GetButtonDown("Jump")
             ? jumpBufferTime
             : Mathf.Max(jumpBufferCounter - Time.deltaTime, 0f);
@@ -171,6 +239,11 @@ public class Movement : MonoBehaviour
             StartCrouch();
         else
             TryStand();
+
+        float h = Input.GetAxis("Horizontal");
+        HorizontalInput = h;
+        HorizontalSpeedNormalized = Mathf.Clamp01(Mathf.Abs(h));
+        FacingRight = h >= 0f;
     }
 
     private void FixedUpdate()
@@ -180,13 +253,26 @@ public class Movement : MonoBehaviour
 
         // Cache ground check once per physics step to avoid duplicate Physics queries.
         bool prevGrounded = isGrounded;
-        isGrounded = ComputeIsGrounded();
+
+        bool groundHit = ComputeIsGrounded();
+
+        if (groundHit && isOnSteepSlope)
+            steepSlopeTimer += Time.fixedDeltaTime;
+        else
+            steepSlopeTimer = 0f;
+
+    // Slip when the slope is steeper than maxWalkableSlopeDegrees AND either the grace time expired
+    // or the uphill speed multiplier has decayed to (almost) zero. This allows gradual uphill decay
+    // before full slipping begins.
+    bool isSlippingOnSteepSlope = groundHit && isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
+
+        // Consider the player grounded only when we hit and are not slipping due to a steep slope.
+        isGrounded = groundHit && !isSlippingOnSteepSlope;
 
         // Fire leave-ground event when we transition from grounded -> not-grounded
         if (prevGrounded && !isGrounded)
         {
             OnLeaveGround?.Invoke();
-            onLeave?.Invoke();
             // transition to falling when we leave ground (passive falls)
             currentState = MovementState.Falling;
         }
@@ -195,7 +281,6 @@ public class Movement : MonoBehaviour
         if (!prevGrounded && isGrounded)
         {
             OnLand?.Invoke();
-            onLand?.Invoke();
             // decide Idle/Walking on land
             float h = Input.GetAxis("Horizontal");
             if (isCrouching)
@@ -206,18 +291,22 @@ public class Movement : MonoBehaviour
                 currentState = MovementState.Idle;
         }
 
-        // State-specific behavior: keep existing handlers but update state where needed.
         HandleHorizontalMovement();
         HandleJump();
         HandleVariableJumpGravity();
         HandleCrouchLerps();
 
-        // If grounded and not crouching, decide between Idle and Walking.
         UpdateGroundMoveState();
+
+        // Update exposed physics info for animations.
+        if (rb != null)
+            VerticalVelocity = rb.linearVelocity.y;
     }
     #endregion
 
-    // Cache update helper
+    /// <summary>
+    /// Cache update helper
+    /// </summary>
     private void UpdateCachedTransform()
     {
         if (tr == null)
@@ -227,32 +316,113 @@ public class Movement : MonoBehaviour
         cachedRight = tr.right;
     }
 
+    /// <summary>
+    /// Movement handling (horizontal, wall/ground projection)
+    /// </summary>
     #region Movement
     private void HandleHorizontalMovement()
     {
         if (rb == null)
             return;
 
+    // Are we currently slipping because the slope is too steep?
+    // We allow a grace period or until uphillSpeedMultiplier decays to near zero before full slip.
+    bool isSlippingOnSteepSlope = isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
+
         float moveInput = Input.GetAxis("Horizontal");
-        float currentSpeed = moveSpeedRuntime;
+    // Compute the true base runtime speed from baseSpeedRuntime plus slows/external multipliers.
+    // Do NOT read from moveSpeedRuntime here because moveSpeedRuntime is used as a display
+    // value and may have been overwritten earlier. Using baseSpeedRuntime ensures the
+    // movement math uses the real runtime speed and will return to default after sliding.
+    float baseRuntimeSpeed = baseSpeedRuntime * slowMultiplierTotal * externalSpeedMultiplier;
 
         Vector3 inputDir = cachedRight * moveInput;
 
+        // Compute whether the player is pushing uphill using input direction and slope direction.
+        bool pushingUphillEarly = false;
+        if (isOnSteepSlope && Mathf.Abs(moveInput) > 0.01f)
+        {
+            Vector3 slideDirEarly = Vector3.ProjectOnPlane(Physics.gravity, lastGroundNormal).normalized;
+            float uphillDotEarly = Vector3.Dot(inputDir, -slideDirEarly);
+            pushingUphillEarly = uphillDotEarly > 0.01f;
+        }
+
+        // Write the effective move speed into moveSpeedRuntime for inspector visibility (display-only).
+        float effectiveDisplaySpeed = baseRuntimeSpeed * (pushingUphillEarly ? uphillSpeedMultiplier : 1f);
+        moveSpeedRuntime = effectiveDisplaySpeed;
+
+        // Use the base runtime speed for actual movement calculations; uphill component reduction
+        // is applied later by scaling the uphill part of 'desired'.
+        float currentSpeed = baseRuntimeSpeed;
+
         Vector3 desired;
 
-        // If we're touching a wall, project movement along the wall to avoid pushing into it.
+        // If we're touching a wall, only constrain movement when pushing into it.
         if (hasWallNormal)
         {
-            desired = Vector3.ProjectOnPlane(inputDir * currentSpeed, lastWallNormal);
+            float intoWall = Vector3.Dot(inputDir, lastWallNormal);
+            if (intoWall < -0.001f)
+                desired = Vector3.ProjectOnPlane(inputDir * currentSpeed, lastWallNormal);
+            else
+                desired = inputDir * currentSpeed;
         }
         // If we're grounded, project movement onto the ground plane so we walk along slopes naturally.
         else if (isGrounded)
         {
             desired = Vector3.ProjectOnPlane(inputDir * currentSpeed, lastGroundNormal);
+
+            // If the ground is steeper than the configured walkable angle we should limit how much
+            // the player can actively move up the slope. Instead of instantly clamping the uphill
+            // component we gradually reduce the player's uphill movement until it reaches zero,
+            // allowing the slide code below to pull them back down.
+            // Use world up to measure ground steepness so the calculation isn't affected
+            // by the player's local rotation. This yields the true slope angle in degrees.
+            float slopeAngle = Vector3.Angle(lastGroundNormal, Vector3.up);
+            if (slopeAngle > maxWalkableSlopeDegrees)
+            {
+                Vector3 slideDir = Vector3.ProjectOnPlane(Physics.gravity, lastGroundNormal).normalized;
+
+                // How far between maxWalkable and vertical the slope is (0..1).
+                float slopeProportion = Mathf.InverseLerp(maxWalkableSlopeDegrees, 90f, slopeAngle);
+
+                // Check whether the player's desired movement contains an uphill component.
+                float uphillDot = Vector3.Dot(desired, -slideDir); // >0 means pushing uphill
+                bool pushingUphill = uphillDot > 0.01f;
+
+                if (pushingUphill)
+                {
+                    // Gradually reduce the uphill multiplier; steeper slopes reduce much faster.
+                    // Amplify reduction with slopeProportion so a few degrees past the threshold reduces
+                    // quickly (e.g. 55° will decay noticeably in a single second).
+                    float reductionAmplifier = Mathf.Lerp(1f, 6f, slopeProportion);
+                    uphillSpeedMultiplier = Mathf.Max(0f, uphillSpeedMultiplier - uphillReductionRate * reductionAmplifier * Time.fixedDeltaTime);
+                }
+                else
+                {
+                    // Recover multiplier when not pushing uphill.
+                    uphillSpeedMultiplier = Mathf.Min(1f, uphillSpeedMultiplier + uphillRecoveryRate * Time.fixedDeltaTime);
+                }
+
+                // If the multiplier is reduced, scale only the uphill component so other directional
+                // inputs (e.g., strafing) remain responsive.
+                if (uphillSpeedMultiplier < 1f && pushingUphill)
+                {
+                    Vector3 uphillComp = Vector3.Project(desired, -slideDir);
+                    Vector3 otherComp = desired - uphillComp;
+                    desired = otherComp + uphillComp * uphillSpeedMultiplier;
+                }
+            }
+            else
+            {
+                // Not a steep slope: recover the uphill multiplier toward full speed.
+                uphillSpeedMultiplier = Mathf.Min(1f, uphillSpeedMultiplier + uphillRecoveryRate * Time.fixedDeltaTime);
+            }
         }
         else
         {
             desired = inputDir * currentSpeed;
+            // When not grounded we should restore uphill movement multiplier so mid-air control isn't penalized.
+            uphillSpeedMultiplier = 1f;
         }
 
         Vector3 v = rb.linearVelocity;
@@ -267,6 +437,32 @@ public class Movement : MonoBehaviour
         if (isGrounded && v.y <= 0.1f)
         {
             v += -lastGroundNormal * groundStickForce * Time.fixedDeltaTime;
+        }
+
+        // If we're on a steep slope (regardless of whether we are still considered grounded), apply sliding.
+        if (isOnSteepSlope)
+        {
+            // If we've exceeded the grace time, immediately stop player-driven horizontal movement
+            // and nudge the player downward to start falling; sliding will still be applied below.
+            if (isSlippingOnSteepSlope)
+            {
+                v.x = 0f;
+                v.z = 0f;
+                currentState = MovementState.Falling;
+                if (v.y > -0.5f)
+                    v.y = -0.5f;
+            }
+
+            // Gravity projected onto the ground plane gives the downhill direction.
+            Vector3 slideDir = Vector3.ProjectOnPlane(Physics.gravity, lastGroundNormal).normalized;
+
+            // Use the recorded lastSlopeAngleDeg (computed in ComputeIsGrounded) so we don't recompute.
+            float slideFactor = Mathf.InverseLerp(maxWalkableSlopeDegrees, 90f, lastSlopeAngleDeg);
+
+            // Stronger sliding when fully slipping, reduced when still in the grace window.
+            float strengthMultiplier = isSlippingOnSteepSlope ? 1f : 0.35f;
+
+            v += slideDir * slopeSlideAcceleration * slideFactor * strengthMultiplier * Time.fixedDeltaTime;
         }
 
         rb.linearVelocity = v;
@@ -312,6 +508,9 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// Jump logic and variable gravity handling
+    /// </summary>
     #region Jump
     private void HandleJump()
     {
@@ -325,8 +524,16 @@ public class Movement : MonoBehaviour
         // buffer means "recently pressed jump", coyote means "still allowed to jump".
         if (jumpBufferCounter > 0f && coyoteCounter > 0f)
         {
+            // Prevent jumping from steep slopes that will cause slipping/falling.
+            if (lastSlopeAngleDeg > maxWalkableSlopeDegrees)
+            {
+                jumpBufferCounter = 0f;
+                coyoteCounter = 0f;
+                return;
+            }
             Vector3 v = rb.linearVelocity;
-            v.y = jumpForce;
+            float effectiveJump = isCrouching ? jumpForce * crouchJumpMultiplier : jumpForce;
+            v.y = effectiveJump;
             rb.linearVelocity = v;
 
             jumpBufferCounter = 0f;
@@ -334,7 +541,6 @@ public class Movement : MonoBehaviour
 
             // Notify listeners that a jump happened.
             OnJump?.Invoke();
-            onJump?.Invoke();
             // Transition to Jumping state
             currentState = MovementState.Jumping;
         }
@@ -364,6 +570,9 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// Crouch geometry and lerp helpers
+    /// </summary>
     #region Crouch
     private void InitializeCrouchGeometry()
     {
@@ -515,6 +724,9 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// Public API for temporary slows
+    /// </summary>
     #region Slows
     public void AddSlow(float multiplier, float duration)
     {
@@ -560,6 +772,9 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// Read-only public state properties for other systems
+    /// </summary>
     #region Public State
     // Read-only properties for other systems to query without mutating state.
     public bool IsGrounded => isGrounded;
@@ -567,6 +782,9 @@ public class Movement : MonoBehaviour
     public float CurrentMoveSpeed => moveSpeedRuntime;
     #endregion
 
+    /// <summary>
+    /// Ground query helpers (spherecast position and checks)
+    /// </summary>
     #region Ground Check
     private Vector3 GetGroundCheckPosition()
     {
@@ -608,14 +826,26 @@ public class Movement : MonoBehaviour
         {
             // Record the ground normal we hit so movement can be projected onto slopes.
             lastGroundNormal = hit.normal;
+
+            // Record slope angle relative to world up and whether it's considered steep.
+            lastSlopeAngleDeg = Vector3.Angle(hit.normal, Vector3.up);
+            isOnSteepSlope = lastSlopeAngleDeg > maxWalkableSlopeDegrees;
+
             return true;
         }
 
+        // No ground hit: reset slope info and indicate not grounded.
         lastGroundNormal = cachedUp;
+        lastSlopeAngleDeg = 0f;
+        isOnSteepSlope = false;
+
         return false;
     }
     #endregion
 
+    /// <summary>
+    /// Checks for standing clearance using capsule overlap
+    /// </summary>
     #region Stand Clearance (Capsule)
     private bool HasStandingClearance()
     {
@@ -651,10 +881,6 @@ public class Movement : MonoBehaviour
 
         if (layerIndex == -1)
         {
-            Debug.LogError(
-                "Movement: No layer named 'Walkable' exists. Ground checks will fail.",
-                this
-            );
             groundLayer = 0;
             return;
         }
@@ -662,6 +888,9 @@ public class Movement : MonoBehaviour
         groundLayer = 1 << layerIndex;
     }
     
+    /// <summary>
+    /// Debug gizmos to visualize collider and standing capsule
+    /// </summary>
     #region Gizmos (Debug)
     private void OnDrawGizmos()
     {

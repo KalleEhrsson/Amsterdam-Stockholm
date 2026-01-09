@@ -365,7 +365,7 @@ GameObject:
   m_Component:
   - component: {fileID: 364905518}
   m_Layer: 0
-  m_Name: Obstacles
+  m_Name: Walls
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -387,8 +387,6 @@ Transform:
   - {fileID: 496504963}
   - {fileID: 1657670251}
   - {fileID: 1879541058}
-  - {fileID: 2008777700}
-  - {fileID: 1323115603}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &496504959
@@ -737,12 +735,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1323115599}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.46174863, w: 0.8870109}
+  m_LocalRotation: {x: 0, y: 0, z: 0.46174863, w: 0.8870109}
   m_LocalPosition: {x: 3.64, y: 1.15, z: 0.2}
-  m_LocalScale: {x: 3.2371998, y: 0.21716, z: 4.2887}
+  m_LocalScale: {x: 3.2372, y: 0.21716, z: 4.2887}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 364905518}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 55}
 --- !u!1 &1657670247
 GameObject:
@@ -1070,12 +1068,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2008777696}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.13052616, w: 0.9914449}
+  m_LocalRotation: {x: 0, y: 0, z: 0.13052616, w: 0.9914449}
   m_LocalPosition: {x: 2.4, y: -0.9, z: 0.2}
-  m_LocalScale: {x: 3.2372003, y: 0.21716002, z: 4.2887}
+  m_LocalScale: {x: 3.2372, y: 0.21716, z: 4.2887}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 364905518}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 15}
 --- !u!1001 &8290334680815298049
 PrefabInstance:
@@ -1187,3 +1185,5 @@ SceneRoots:
   - {fileID: 364905518}
   - {fileID: 8290334680815298049}
   - {fileID: 1044969603}
+  - {fileID: 2008777700}
+  - {fileID: 1323115603}
