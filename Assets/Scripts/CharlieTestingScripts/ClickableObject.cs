@@ -7,8 +7,9 @@ public class ClickableObject : MonoBehaviour
     private MeshRenderer meshR;
 
     [Header("Materials")]
-    [SerializeField] private List<Material> outlineMaterials;
-    [SerializeField] private List<Material> normalMaterials;
+    [SerializeField] private List<Material> materials;
+    [SerializeField] private List<Material> clickableMaterials;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -24,12 +25,12 @@ public class ClickableObject : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        meshR.SetMaterials(outlineMaterials);
+        meshR.SetMaterials(clickableMaterials);
     }
 
     private void OnMouseExit()
     {
-        meshR.SetMaterials(normalMaterials);
+        meshR.SetMaterials(materials);
     }
 
     private void OnMouseDown()

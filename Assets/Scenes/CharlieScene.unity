@@ -151,11 +151,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64b208caffd3b343a526c698f4e0f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  outlineMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  materials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
   - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
-  normalMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  clickableMaterials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
+  - {fileID: 2100000, guid: 07079cad0dc2b174bb989e47dd986c7c, type: 2}
 --- !u!135 &148622877
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -202,8 +203,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
-  - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
+  - {fileID: -876546973899608171, guid: 3f05d50094c2586468456c3af27a0e0a, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -243,7 +243,7 @@ Transform:
   m_GameObject: {fileID: 148622875}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.33, y: 1.36, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -455,7 +455,6 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
-  - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -495,7 +494,7 @@ Transform:
   m_GameObject: {fileID: 870940008}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.45, y: -0.05, z: 5.04}
+  m_LocalPosition: {x: -8.16, y: -0.05, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -513,11 +512,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64b208caffd3b343a526c698f4e0f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClickableObject
-  outlineMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  materials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
   - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
-  normalMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  clickableMaterials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
+  - {fileID: 2100000, guid: 07079cad0dc2b174bb989e47dd986c7c, type: 2}
 --- !u!1 &978604069
 GameObject:
   m_ObjectHideFlags: 0
@@ -550,11 +550,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64b208caffd3b343a526c698f4e0f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  outlineMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  materials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
   - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
-  normalMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  clickableMaterials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
+  - {fileID: 2100000, guid: 07079cad0dc2b174bb989e47dd986c7c, type: 2}
 --- !u!135 &978604071
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -601,8 +602,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
-  - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
+  - {fileID: -876546973899608171, guid: 3f05d50094c2586468456c3af27a0e0a, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -642,7 +642,7 @@ Transform:
   m_GameObject: {fileID: 978604069}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.28, y: 0, z: 9.32}
+  m_LocalPosition: {x: 0, y: 0, z: 30}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -852,11 +852,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64b208caffd3b343a526c698f4e0f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  outlineMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  materials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
   - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
-  normalMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  clickableMaterials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
+  - {fileID: 2100000, guid: 07079cad0dc2b174bb989e47dd986c7c, type: 2}
 --- !u!135 &1680672560
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -904,7 +905,6 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
-  - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -944,7 +944,7 @@ Transform:
   m_GameObject: {fileID: 1680672558}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3, y: -2, z: 3}
+  m_LocalPosition: {x: 0, y: 0, z: 20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1017,7 +1017,6 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
-  - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1057,7 +1056,7 @@ Transform:
   m_GameObject: {fileID: 2084739647}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.73, y: -0.79, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1075,11 +1074,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64b208caffd3b343a526c698f4e0f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  outlineMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  materials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
   - {fileID: 2100000, guid: a8d5029f85a0a704b8c912e410450653, type: 2}
-  normalMaterials:
-  - {fileID: 2100000, guid: d75c8bccbcb049d4487ca0170bcefe48, type: 2}
+  clickableMaterials:
+  - {fileID: 2100000, guid: f9c6ac11216d66245b7f43011deebf78, type: 2}
+  - {fileID: 2100000, guid: 07079cad0dc2b174bb989e47dd986c7c, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
