@@ -243,7 +243,9 @@ public class Movement : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         HorizontalInput = h;
         HorizontalSpeedNormalized = Mathf.Clamp01(Mathf.Abs(h));
-        FacingRight = h >= 0f;
+        
+        if (Mathf.Abs(h) > 0.01f)
+            FacingRight = h > 0f;
     }
 
     private void FixedUpdate()

@@ -1,90 +1,132 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Animator))]
-public class PlayerAnimationController : MonoBehaviour
+[DisallowMultipleComponent]
+public sealed class PlayerAnimationController : MonoBehaviour
 {
-    [Header("References")]
-    [Tooltip("Movement component that provides state and events. Auto-found if null.")]
+    #region Inspector
+    [SerializeField] private Animator animator;
     [SerializeField] private Movement movement;
 
-    [Tooltip("Animator to drive. Will be auto-found on this GameObject if left empty.")]
-    [SerializeField] private Animator animator;
-
     [Header("Animator Parameters")]
-    [SerializeField] private string animStateParam = "State";
-    [SerializeField] private string animSpeedParam = "Speed";
-    [SerializeField] private string animFacingParam = "FacingRight";
-    [SerializeField] private string animJumpTrigger = "Jump";
-    [SerializeField] private string animLandTrigger = "Land";
+    [SerializeField] private string stateParam = "State";
+    [SerializeField] private string speedParam = "Speed";
+    [SerializeField] private string facingRightParam = "FacingRight";
+    [SerializeField] private string jumpTrigger = "Jump";
+    [SerializeField] private string landTrigger = "Land";
 
-    private int stateHash;
-    private int speedHash;
-    private int facingHash;
-    private int jumpHash;
-    private int landHash;
+    [Header("Visual Flip")]
+    [SerializeField] private Transform visual;
+    [SerializeField] private bool flipByScale = true;
+    [SerializeField] private bool flipSpriteRendererInstead = false;
+    #endregion
+
+    #region Cached
+    private SpriteRenderer spriteRenderer;
+    #endregion
+
+    #region Unity
+    private void Reset()
+    {
+        animator = GetComponentInChildren<Animator>();
+        movement = GetComponent<Movement>();
+
+        FindVisual();
+    }
 
     private void Awake()
     {
-        if (movement == null)
-            movement = GetComponent<Movement>() ?? GetComponentInParent<Movement>();
-
         if (animator == null)
-            animator = GetComponent<Animator>() ?? GetComponentInChildren<Animator>();
+            animator = GetComponentInChildren<Animator>();
 
-        stateHash = Animator.StringToHash(animStateParam);
-        speedHash = Animator.StringToHash(animSpeedParam);
-        facingHash = Animator.StringToHash(animFacingParam);
-        jumpHash = Animator.StringToHash(animJumpTrigger);
-        landHash = Animator.StringToHash(animLandTrigger);
+        if (movement == null)
+            movement = GetComponent<Movement>();
+
+        FindVisual();
+
+        if (spriteRenderer == null && visual != null)
+            spriteRenderer = visual.GetComponent<SpriteRenderer>();
     }
 
     private void OnEnable()
     {
-        if (movement != null)
-        {
-            movement.OnJump += HandleJump;
-            movement.OnLand += HandleLand;
-            movement.OnLeaveGround += HandleLeaveGround;
-        }
+        if (movement == null)
+            return;
+
+        movement.OnJump += HandleJump;
+        movement.OnLand += HandleLand;
     }
 
     private void OnDisable()
     {
-        if (movement != null)
-        {
-            movement.OnJump -= HandleJump;
-            movement.OnLand -= HandleLand;
-            movement.OnLeaveGround -= HandleLeaveGround;
-        }
+        if (movement == null)
+            return;
+
+        movement.OnJump -= HandleJump;
+        movement.OnLand -= HandleLand;
     }
 
     private void Update()
     {
-        if (movement == null || animator == null)
+        if (animator == null || movement == null)
             return;
 
-        // Drive animator parameters each frame for smooth blends.
-        animator.SetInteger(stateHash, (int)movement.CurrentState);
-        animator.SetFloat(speedHash, movement.HorizontalSpeedNormalized);
-        animator.SetBool(facingHash, movement.FacingRight);
+        animator.SetInteger(stateParam, (int)movement.CurrentState);
+        animator.SetFloat(speedParam, movement.HorizontalSpeedNormalized);
+        animator.SetBool(facingRightParam, movement.FacingRight);
     }
 
+    private void LateUpdate()
+    {
+        ApplyFacingFlip();
+    }
+    #endregion
+
+    #region Animation Events
     private void HandleJump()
     {
-        if (animator == null) return;
-        if (!string.IsNullOrEmpty(animJumpTrigger))
-            animator.SetTrigger(jumpHash);
+        if (animator != null)
+            animator.SetTrigger(jumpTrigger);
     }
 
     private void HandleLand()
     {
-        if (animator == null) return;
-        if (!string.IsNullOrEmpty(animLandTrigger))
-            animator.SetTrigger(landHash);
+        if (animator != null)
+            animator.SetTrigger(landTrigger);
+    }
+    #endregion
+
+    #region Visual
+    private void FindVisual()
+    {
+        if (visual != null)
+            return;
+
+        Transform found = transform.Find("Visual");
+        visual = found != null ? found : transform;
     }
 
-    private void HandleLeaveGround()
+    private void ApplyFacingFlip()
     {
-        // Currently no specific animation trigger for leaving ground.
+        if (movement == null || visual == null)
+            return;
+
+        bool facingRight = movement.FacingRight;
+
+        if (flipSpriteRendererInstead)
+        {
+            if (spriteRenderer != null)
+                spriteRenderer.flipX = !facingRight;
+
+            return;
+        }
+
+        if (!flipByScale)
+            return;
+
+        Vector3 scale = visual.localScale;
+        float x = Mathf.Abs(scale.x);
+        scale.x = facingRight ? x : -x;
+        visual.localScale = scale;
     }
+    #endregion
 }
