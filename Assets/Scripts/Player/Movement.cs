@@ -6,7 +6,7 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     // Simple movement state machine
-    public enum MovementState { Idle, Walking, Jumping, Falling, Crouching }
+    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Falling = 3, Crouching = 4 }
     private MovementState currentState = MovementState.Idle;
 
     // Expose current state for external systems
