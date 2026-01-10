@@ -102,7 +102,7 @@ TextureImporter:
         serializedVersion: 2
         x: 7
         y: 0
-        width: 378
+        width: 282
         height: 688
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -122,9 +122,9 @@ TextureImporter:
       name: idleRight_1
       rect:
         serializedVersion: 2
-        x: 472
+        x: 505
         y: 0
-        width: 413
+        width: 282
         height: 681
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -144,10 +144,10 @@ TextureImporter:
       name: idleRight_2
       rect:
         serializedVersion: 2
-        x: 957
-        y: 0
-        width: 396
-        height: 664
+        x: 981
+        y: 1
+        width: 282
+        height: 663
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -166,10 +166,10 @@ TextureImporter:
       name: idleRight_3
       rect:
         serializedVersion: 2
-        x: 1444
-        y: 0
-        width: 486
-        height: 676
+        x: 1458
+        y: 2
+        width: 278
+        height: 674
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -199,6 +199,8 @@ TextureImporter:
       entries:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+      - key: SpriteEditor.SliceOnImport
+        value: False
     nameFileIdTable:
       idleRight_0: -1494433356
       idleRight_1: -966129348
