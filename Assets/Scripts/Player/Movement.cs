@@ -162,8 +162,6 @@ public class Movement : MonoBehaviour
     private float crouchLerpT;
 
     private Vector3 originalCenter;
-    private Vector3 visualScaleOriginal;
-    private Vector3 visualScaleCrouched;
     #endregion
 
     /// <summary>
@@ -608,13 +606,6 @@ public class Movement : MonoBehaviour
 
         crouchSpeed = moveSpeed * 0.5f;
 
-        visualScaleOriginal = visual.localScale;
-        visualScaleCrouched = new Vector3(
-            visualScaleOriginal.x,
-            visualScaleOriginal.y * 0.6f,
-            visualScaleOriginal.z
-        );
-
         // Cache collider geometry used by ground checks to avoid repeated property access.
         if (col != null)
         {
@@ -693,8 +684,6 @@ public class Movement : MonoBehaviour
             cachedColCenterLocal = col.center;
         }
 
-        visual.localScale = Vector3.Lerp(visualScaleOriginal, visualScaleCrouched, t);
-
         // Crouch changes base speed, then slow system applies on top.
         baseSpeedRuntime = Mathf.Lerp(moveSpeed, crouchSpeed, t);
         ApplySlowToRuntime();
@@ -722,8 +711,6 @@ public class Movement : MonoBehaviour
             cachedBottomOffset = cachedHalfHeight - col.radius;
             cachedColCenterLocal = col.center;
         }
-
-        visual.localScale = Vector3.Lerp(visualScaleCrouched, visualScaleOriginal, t);
 
         if (standSpeedRecoveryDelay > 0f)
         {
