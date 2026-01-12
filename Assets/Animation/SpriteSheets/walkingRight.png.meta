@@ -119,28 +119,6 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_1
-      rect:
-        serializedVersion: 2
-        x: 2043
-        y: 711
-        width: 9
-        height: 5
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 0b65ca09486bc944891bad5eb3c42c76
-      internalID: -1523310295
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: walkingRight_2
       rect:
         serializedVersion: 2
@@ -229,72 +207,6 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_6
-      rect:
-        serializedVersion: 2
-        x: 5207
-        y: 699
-        width: 5
-        height: 5
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: b0d1622738116684ca9e2aa7d0da993e
-      internalID: 2028636953
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: walkingRight_7
-      rect:
-        serializedVersion: 2
-        x: 691
-        y: 497
-        width: 5
-        height: 5
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 6e91300b582c137488c58a80d0c7773a
-      internalID: 1482980255
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: walkingRight_8
-      rect:
-        serializedVersion: 2
-        x: 3775
-        y: 497
-        width: 5
-        height: 5
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: abbd248e44f5d1a468c941dad2164255
-      internalID: -472688395
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: walkingRight_9
       rect:
         serializedVersion: 2
@@ -356,50 +268,6 @@ TextureImporter:
       bones: []
       spriteID: 94ee77a6ce424384b9d9850ddb1db483
       internalID: -763895493
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: walkingRight_12
-      rect:
-        serializedVersion: 2
-        x: 769
-        y: 356
-        width: 5
-        height: 9
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 55f49ff6278d4e7409d43a595194ad41
-      internalID: -210272002
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: walkingRight_13
-      rect:
-        serializedVersion: 2
-        x: 2311
-        y: 356
-        width: 5
-        height: 9
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: e06fe21bf940042499d6d976ca65a3c0
-      internalID: 879541040
       vertices: []
       indices: 
       edges: []

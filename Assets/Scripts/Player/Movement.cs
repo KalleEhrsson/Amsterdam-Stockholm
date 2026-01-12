@@ -275,8 +275,9 @@ public class Movement : MonoBehaviour
         if (prevGrounded && !isGrounded)
         {
             OnLeaveGround?.Invoke();
-            // transition to falling when we leave ground (passive falls)
-            currentState = MovementState.Falling;
+             // Only transition to falling when leaving ground without upward momentum.
+            if (rb == null || rb.linearVelocity.y <= 0.01f)
+                currentState = MovementState.Falling;
         }
 
         // Fire landing event exactly when we transition from not-grounded -> grounded.
@@ -297,6 +298,7 @@ public class Movement : MonoBehaviour
         HandleJump();
         HandleVariableJumpGravity();
         HandleCrouchLerps();
+        UpdateAirborneState();
 
         UpdateGroundMoveState();
 
@@ -571,6 +573,24 @@ public class Movement : MonoBehaviour
         }
     }
     #endregion
+
+    private void UpdateAirborneState()
+    {
+        if (isGrounded || rb == null)
+            return;
+
+        float verticalVelocity = rb.linearVelocity.y;
+
+        if (verticalVelocity > 0.05f)
+        {
+            if (currentState != MovementState.Jumping)
+                currentState = MovementState.Jumping;
+        }
+        else if (verticalVelocity < -0.05f)
+        {
+            currentState = MovementState.Falling;
+        }
+    }
 
     /// <summary>
     /// Crouch geometry and lerp helpers
