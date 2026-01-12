@@ -16,8 +16,9 @@ public sealed class PlayerAnimationController : MonoBehaviour
 
     [Header("Visual Flip")]
     [SerializeField] private Transform visual;
-    [SerializeField] private bool flipByScale = false;
-    [SerializeField] private bool flipSpriteRendererInstead = false;
+
+    [SerializeField] private bool flipByScale;
+    [SerializeField] private bool flipSpriteRendererInstead;
     #endregion
 
     #region Cached

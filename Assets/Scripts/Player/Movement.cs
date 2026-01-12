@@ -45,9 +45,9 @@ public class Movement : MonoBehaviour
     /// </summary>
     #region Animation (Exposed)
     public bool FacingRight { get; private set; } = true;
-    public float HorizontalInput { get; private set; } = 0f;
-    public float HorizontalSpeedNormalized { get; private set; } = 0f;
-    public float VerticalVelocity { get; private set; } = 0f;
+    public float HorizontalInput { get; private set; }
+    public float HorizontalSpeedNormalized { get; private set; }
+    public float VerticalVelocity { get; private set; }
     #endregion
 
     /// <summary>
@@ -93,13 +93,13 @@ public class Movement : MonoBehaviour
 
     [Header("Ground Query")]
     [SerializeField, Tooltip("SphereCast distance used for ground detection.")]
-    private float groundCastDistance = 0.08f;
+    private float groundCastDistance = 0.2f;
 
     [SerializeField, Tooltip("Radius multiplier applied to collider.radius when performing ground SphereCast.")]
-    private float groundSphereRadiusMultiplier = 0.95f;
+    private float groundSphereRadiusMultiplier = 0.98f;
 
     [SerializeField, Tooltip("Small offset downward applied to ground check origin to reduce false negatives.")]
-    private float groundBottomBias = 0.02f;
+    private float groundBottomBias = 0.05f;
     #endregion
 
     /// <summary>
@@ -139,7 +139,7 @@ public class Movement : MonoBehaviour
     /// Runtime jump-related timers and flags
     /// </summary>
     #region Jump State
-    private bool isGrounded;
+    [SerializeField] bool isGrounded;
     private float jumpBufferCounter;
     private float coyoteCounter;
     #endregion
@@ -183,6 +183,17 @@ public class Movement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         col = GetComponent<CapsuleCollider>();
+        tr = transform;
+        
+        CacheColliderGeometry();
+        
+        cachedUp = tr.up;
+        cachedRight = tr.right;
+
+        rb.freezeRotation = true;
+
+        AutoAssignGroundLayer();
+        
         if (visual == null)
         {
             if (transform.parent != null)
@@ -201,16 +212,6 @@ public class Movement : MonoBehaviour
 
             visual ??= transform;
         }
-
-        tr = transform;
-
-        // Initialize cached axes to avoid reading transform repeatedly.
-        cachedUp = tr.up;
-        cachedRight = tr.right;
-
-        rb.freezeRotation = true;
-
-        AutoAssignGroundLayer();
     }
 
     private void Start()
@@ -232,7 +233,7 @@ public class Movement : MonoBehaviour
             : Mathf.Max(jumpBufferCounter - Time.deltaTime, 0f);
 
         // Crouch input
-        bool crouchHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.S);
+        bool crouchHeld = Input.GetKey(KeyCode.LeftControl);
         if (crouchHeld)
             StartCrouch();
         else
@@ -240,7 +241,6 @@ public class Movement : MonoBehaviour
 
         float h = Input.GetAxis("Horizontal");
         HorizontalInput = h;
-        HorizontalSpeedNormalized = Mathf.Clamp01(Mathf.Abs(h));
         
         if (Mathf.Abs(h) > 0.01f)
             FacingRight = h > 0f;
@@ -468,6 +468,18 @@ public class Movement : MonoBehaviour
         }
 
         rb.linearVelocity = v;
+        
+        // Animation speed from real movement (NOT input)
+        float vx = Vector3.Dot(rb.linearVelocity, cachedRight);
+        float absVx = Mathf.Abs(vx);
+
+        // Normalize against current max move speed so value stays 0..1
+        float maxSpeed = Mathf.Max(
+            0.01f,
+            baseSpeedRuntime * slowMultiplierTotal * externalSpeedMultiplier
+        );
+
+        HorizontalSpeedNormalized = Mathf.Clamp01(absVx / maxSpeed);
     }
 
     private void UpdateGroundMoveState()
@@ -481,10 +493,9 @@ public class Movement : MonoBehaviour
             return;
 
         float h = Input.GetAxis("Horizontal");
-        if (Mathf.Abs(h) > 0.1f)
-            currentState = MovementState.Walking;
-        else
-            currentState = MovementState.Idle;
+        currentState = Mathf.Abs(h) > 0.1f
+            ? MovementState.Walking
+            : MovementState.Idle;
     }
     
     private void OnCollisionStay(Collision collision)
@@ -809,7 +820,7 @@ public class Movement : MonoBehaviour
         Vector3 bottomSphereCenter = worldCenter - up * bottomOffset;
 
         // Small offset downward reduces false negatives on tiny bumps.
-        return bottomSphereCenter - up * groundBottomBias;
+        return bottomSphereCenter + up * groundBottomBias;
     }
 
     private bool ComputeIsGrounded()
@@ -850,6 +861,20 @@ public class Movement : MonoBehaviour
 
         return false;
     }
+    
+    private void CacheColliderGeometry()
+    {
+        if (col == null)
+            col = GetComponent<CapsuleCollider>();
+
+        if (col == null)
+            return;
+
+        cachedColRadius = col.radius;
+        cachedHalfHeight = Mathf.Max(col.height * 0.5f, col.radius);
+        cachedBottomOffset = cachedHalfHeight - col.radius;
+        cachedColCenterLocal = col.center;
+    }
     #endregion
 
     /// <summary>
@@ -866,13 +891,15 @@ public class Movement : MonoBehaviour
         Vector3 up = cachedUp;
         Vector3 worldCenter = tr.TransformPoint(originalCenter);
 
-    float radius = cachedColRadius;
-    float halfHeight = Mathf.Max(originalHeight * 0.5f, radius);
+        float radius = cachedColRadius;
+        float halfHeight = Mathf.Max(originalHeight * 0.5f, radius);
 
         Vector3 top = worldCenter + up * (halfHeight - radius);
         Vector3 bottom = worldCenter - up * (halfHeight - radius);
 
         float skin = 0.01f;
+        
+        bottom += up * 0.05f;
 
         return !Physics.CheckCapsule(
             bottom,
