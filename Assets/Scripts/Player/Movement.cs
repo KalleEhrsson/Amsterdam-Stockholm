@@ -46,6 +46,7 @@ public class Movement : MonoBehaviour
     #region Animation (Exposed)
     public bool FacingRight { get; private set; } = true;
     public float HorizontalInput { get; private set; }
+    public float MoveX { get; private set; }  
     public float HorizontalSpeedNormalized { get; private set; }
     public float VerticalVelocity { get; private set; }
     #endregion
@@ -93,13 +94,13 @@ public class Movement : MonoBehaviour
 
     [Header("Ground Query")]
     [SerializeField, Tooltip("SphereCast distance used for ground detection.")]
-    private float groundCastDistance = 0.2f;
+    private float groundCastDistance = 0.35f;
 
     [SerializeField, Tooltip("Radius multiplier applied to collider.radius when performing ground SphereCast.")]
     private float groundSphereRadiusMultiplier = 0.98f;
 
     [SerializeField, Tooltip("Small offset downward applied to ground check origin to reduce false negatives.")]
-    private float groundBottomBias = 0.05f;
+    private float groundBottomBias = 0.02f;
     #endregion
 
     /// <summary>
@@ -241,9 +242,16 @@ public class Movement : MonoBehaviour
 
         float h = Input.GetAxis("Horizontal");
         HorizontalInput = h;
-        
+
         if (Mathf.Abs(h) > 0.01f)
+        {
             FacingRight = h > 0f;
+            MoveX = Mathf.Sign(h); // -1 or +1
+        }
+        else
+        {
+            MoveX = FacingRight ? 1f : -1f; // keep last direction for idle aniamtion
+        }
     }
 
     private void FixedUpdate()
@@ -854,6 +862,22 @@ public class Movement : MonoBehaviour
             return true;
         }
 
+        // Fallback: if we're extremely close to the ground, an overlap check can still mark us grounded.
+        Vector3 overlapCenter = origin - cachedUp * (groundBottomBias + 0.01f);
+        float overlapRadius = Mathf.Max(0f, radius * 0.98f);
+        if (Physics.CheckSphere(
+            overlapCenter,
+            overlapRadius,
+            groundLayer,
+            QueryTriggerInteraction.Ignore
+        ))
+        {
+            lastGroundNormal = cachedUp;
+            lastSlopeAngleDeg = 0f;
+            isOnSteepSlope = false;
+            return true;
+        }
+
         // No ground hit: reset slope info and indicate not grounded.
         lastGroundNormal = cachedUp;
         lastSlopeAngleDeg = 0f;
@@ -966,6 +990,20 @@ public class Movement : MonoBehaviour
         Gizmos.DrawLine(standTop - t.right * c.radius, standBottom - t.right * c.radius);
         Gizmos.DrawLine(standTop + t.forward * c.radius, standBottom + t.forward * c.radius);
         Gizmos.DrawLine(standTop - t.forward * c.radius, standBottom - t.forward * c.radius);
+
+        // ---------- Ground check (cyan) ----------
+        Gizmos.color = Color.cyan;
+        float groundRadius = c.radius * groundSphereRadiusMultiplier;
+        float groundHalfHeight = Mathf.Max(c.height * 0.5f, c.radius);
+        float groundBottomOffset = groundHalfHeight - c.radius;
+        Vector3 groundCenter = t.TransformPoint(c.center);
+        Vector3 bottomSphereCenter = groundCenter - up * groundBottomOffset;
+        Vector3 groundOrigin = bottomSphereCenter + up * groundBottomBias;
+        Vector3 groundCastEnd = groundOrigin - up * groundCastDistance;
+
+        Gizmos.DrawWireSphere(groundOrigin, groundRadius);
+        Gizmos.DrawWireSphere(groundCastEnd, groundRadius);
+        Gizmos.DrawLine(groundOrigin, groundCastEnd);
     }
     #endregion
 }

@@ -10,15 +10,12 @@ public sealed class PlayerAnimationController : MonoBehaviour
     [Header("Animator Parameters")]
     [SerializeField] private string stateParam = "State";
     [SerializeField] private string speedParam = "Speed";
+    [SerializeField] private string moveXParam = "MoveX";
     [SerializeField] private string facingRightParam = "FacingRight";
+    [SerializeField] private string verticalVelocityParam = "VerticalVelocity";
+    [SerializeField] private string groundedParam = "Grounded";
     [SerializeField] private string jumpTrigger = "Jump";
     [SerializeField] private string landTrigger = "Land";
-
-    [Header("Visual Flip")]
-    [SerializeField] private Transform visual;
-
-    [SerializeField] private bool flipByScale;
-    [SerializeField] private bool flipSpriteRendererInstead;
     #endregion
 
     #region Cached
@@ -30,8 +27,6 @@ public sealed class PlayerAnimationController : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
         movement = GetComponent<Movement>();
-
-        FindVisual();
     }
 
     private void Awake()
@@ -41,11 +36,6 @@ public sealed class PlayerAnimationController : MonoBehaviour
 
         if (movement == null)
             movement = GetComponent<Movement>();
-
-        FindVisual();
-
-        if (spriteRenderer == null && visual != null)
-            spriteRenderer = visual.GetComponent<SpriteRenderer>();
     }
 
     private void OnEnable()
@@ -72,13 +62,11 @@ public sealed class PlayerAnimationController : MonoBehaviour
             return;
 
         animator.SetInteger(stateParam, (int)movement.CurrentState);
+        animator.SetFloat(moveXParam, movement.MoveX);
         animator.SetFloat(speedParam, movement.HorizontalSpeedNormalized);
+        animator.SetFloat(verticalVelocityParam, movement.VerticalVelocity);
+        animator.SetBool(groundedParam, movement.IsGrounded);
         animator.SetBool(facingRightParam, movement.FacingRight);
-    }
-
-    private void LateUpdate()
-    {
-        ApplyFacingFlip();
     }
     #endregion
 
@@ -93,41 +81,6 @@ public sealed class PlayerAnimationController : MonoBehaviour
     {
         if (animator != null)
             animator.SetTrigger(landTrigger);
-    }
-    #endregion
-
-    #region Visual
-    private void FindVisual()
-    {
-        if (visual != null)
-            return;
-
-        Transform found = transform.Find("Visual");
-        visual = found != null ? found : transform;
-    }
-
-    private void ApplyFacingFlip()
-    {
-        if (movement == null || visual == null)
-            return;
-
-        bool facingRight = movement.FacingRight;
-
-        if (flipSpriteRendererInstead)
-        {
-            if (spriteRenderer != null)
-                spriteRenderer.flipX = !facingRight;
-
-            return;
-        }
-
-        if (!flipByScale)
-            return;
-
-        Vector3 scale = visual.localScale;
-        float x = Mathf.Abs(scale.x);
-        scale.x = facingRight ? x : -x;
-        visual.localScale = scale;
     }
     #endregion
 }
