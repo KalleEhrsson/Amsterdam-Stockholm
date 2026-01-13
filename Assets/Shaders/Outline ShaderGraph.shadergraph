@@ -11,6 +11,9 @@
         },
         {
             "m_Id": "f9055c6e780a430ea2d0a9555dcbe4f8"
+        },
+        {
+            "m_Id": "50364cc5fe214a4094f26b545cf059f3"
         }
     ],
     "m_Keywords": [],
@@ -264,8 +267,8 @@
     ],
     "m_VertexContext": {
         "m_Position": {
-            "x": -23.362442016601564,
-            "y": 62.836395263671878
+            "x": -314.9874267578125,
+            "y": -0.80560302734375
         },
         "m_Blocks": [
             {
@@ -281,8 +284,8 @@
     },
     "m_FragmentContext": {
         "m_Position": {
-            "x": -23.362442016601564,
-            "y": 263.42938232421877
+            "x": -314.9874267578125,
+            "y": 199.78741455078126
         },
         "m_Blocks": [
             {
@@ -638,10 +641,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1538.6851806640625,
-            "y": -8.055953979492188,
-            "width": 170.7860107421875,
-            "height": 33.8349609375
+            "x": -1495.9886474609375,
+            "y": 26.584613800048829,
+            "width": 170.785888671875,
+            "height": 33.8349723815918
         }
     },
     "m_Slots": [
@@ -727,10 +730,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1286.5343017578125,
-            "y": 25.779008865356447,
+            "x": -1286.5340576171875,
+            "y": -0.8056070804595947,
             "width": 129.70068359375,
-            "height": 116.00563049316406
+            "height": 116.00559997558594
         }
     },
     "m_Slots": [
@@ -758,6 +761,31 @@
 }
 
 {
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.BooleanShaderProperty",
+    "m_ObjectId": "50364cc5fe214a4094f26b545cf059f3",
+    "m_Guid": {
+        "m_GuidSerialized": "7e7fd93d-b975-47c7-b093-7e08b7bc7c62"
+    },
+    "m_Name": "Camera Clipping",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "Camera Clipping",
+    "m_DefaultReferenceName": "_Camera_Clipping",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_PerRendererData": false,
+    "m_customAttributes": [],
+    "m_Value": false
+}
+
+{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.PositionNode",
     "m_ObjectId": "512742a583864459a4561e73874808ad",
@@ -769,10 +797,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -741.1467895507813,
-            "y": -127.28388214111328,
-            "width": 204.620849609375,
-            "height": 126.47834014892578
+            "x": -832.178955078125,
+            "y": -127.28390502929688,
+            "width": 204.6209716796875,
+            "height": 126.47833251953125
         }
     },
     "m_Slots": [
@@ -901,10 +929,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -326.4262390136719,
-            "y": 277.32489013671877,
-            "width": 0.0,
-            "height": 0.0
+            "x": -488.190185546875,
+            "y": 236.8447265625,
+            "width": 148.2293701171875,
+            "height": 33.8349609375
         }
     },
     "m_Slots": [
@@ -1073,10 +1101,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1086.7469482421875,
-            "y": 103.11611938476563,
-            "width": 129.7008056640625,
-            "height": 116.00555419921875
+            "x": -1085.1356201171875,
+            "y": 115.19998168945313,
+            "width": 129.70074462890626,
+            "height": 116.00558471679688
         }
     },
     "m_Slots": [
@@ -1238,10 +1266,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1520.9622802734375,
-            "y": 48.33564758300781,
+            "x": -1719.1383056640625,
+            "y": 60.41957473754883,
             "width": 153.8685302734375,
-            "height": 170.78602600097657
+            "height": 170.7859649658203
         }
     },
     "m_Slots": [
@@ -1402,6 +1430,9 @@
         },
         {
             "m_Id": "f9055c6e780a430ea2d0a9555dcbe4f8"
+        },
+        {
+            "m_Id": "50364cc5fe214a4094f26b545cf059f3"
         }
     ]
 }
@@ -1514,10 +1545,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1453.2923583984375,
-            "y": 253.7622833251953,
-            "width": 128.08935546875,
-            "height": 116.00553894042969
+            "x": -1453.292236328125,
+            "y": 231.20556640625,
+            "width": 128.0894775390625,
+            "height": 116.00558471679688
         }
     },
     "m_Slots": [
@@ -1568,10 +1599,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -461.6055603027344,
-            "y": -24.167829513549806,
-            "width": 129.7005615234375,
-            "height": 116.00563049316406
+            "x": -561.499267578125,
+            "y": -0.80560302734375,
+            "width": 129.70068359375,
+            "height": 116.00558471679688
         }
     },
     "m_Slots": [
@@ -1611,10 +1642,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1286.5343017578125,
-            "y": 253.7622833251953,
+            "x": -1286.5341796875,
+            "y": 231.20556640625,
             "width": 126.478271484375,
-            "height": 116.00553894042969
+            "height": 116.00558471679688
         }
     },
     "m_Slots": [
@@ -1701,10 +1732,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1010.2153930664063,
-            "y": -63.641910552978519,
-            "width": 204.62091064453126,
-            "height": 126.47830200195313
+            "x": -1085.1356201171875,
+            "y": -64.44754028320313,
+            "width": 204.6209716796875,
+            "height": 127.28390502929688
         }
     },
     "m_Slots": [
@@ -1737,10 +1768,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -715.367919921875,
-            "y": 85.39303588867188,
-            "width": 129.70074462890626,
-            "height": 116.00555419921875
+            "x": -832.178955078125,
+            "y": 91.83773803710938,
+            "width": 129.70068359375,
+            "height": 116.005615234375
         }
     },
     "m_Slots": [
@@ -1938,10 +1969,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1687.72021484375,
-            "y": 265.8461608886719,
+            "x": -1687.719970703125,
+            "y": 255.37339782714845,
             "width": 122.4503173828125,
-            "height": 243.28948974609376
+            "height": 243.2894744873047
         }
     },
     "m_Slots": [
