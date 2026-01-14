@@ -6,7 +6,10 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     // Simple movement state machine
-    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Falling = 3, Crouching = 4 }
+    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Crouching = 4 }
+
+   public enum SurfaceType { Wood = 0, Metal = 1 }
+
     private MovementState currentState = MovementState.Idle;
 
     // Expose current state for external systems
@@ -283,9 +286,7 @@ public class Movement : MonoBehaviour
         if (prevGrounded && !isGrounded)
         {
             OnLeaveGround?.Invoke();
-             // Only transition to falling when leaving ground without upward momentum.
-            if (rb == null || rb.linearVelocity.y <= 0.01f)
-                currentState = MovementState.Falling;
+            currentState = MovementState.Jumping;
         }
 
         // Fire landing event exactly when we transition from not-grounded -> grounded.
@@ -460,7 +461,7 @@ public class Movement : MonoBehaviour
             {
                 v.x = 0f;
                 v.z = 0f;
-                currentState = MovementState.Falling;
+                currentState = MovementState.Jumping;
                 if (v.y > -0.5f)
                     v.y = -0.5f;
             }
@@ -502,11 +503,8 @@ public class Movement : MonoBehaviour
             return;
 
             // Safety: if we landed but missed the explicit land transition, force a locomotion state.
-        if (currentState == MovementState.Jumping || currentState == MovementState.Falling)
-        {
-            if (rb != null && rb.linearVelocity.y > 0.05f)
-                return;
-        }
+        if (!isGrounded && rb != null && rb.linearVelocity.y > 0.05f)
+            return;
 
         float h = Input.GetAxis("Horizontal");
         currentState = Mathf.Abs(h) > 0.1f
@@ -600,22 +598,13 @@ public class Movement : MonoBehaviour
     #endregion
 
     private void UpdateAirborneState()
-    {
-        if (isGrounded || rb == null)
-            return;
+{
+    if (isGrounded || rb == null)
+        return;
 
-        float verticalVelocity = rb.linearVelocity.y;
-
-        if (verticalVelocity > 0.05f)
-        {
-            if (currentState != MovementState.Jumping)
-                currentState = MovementState.Jumping;
-        }
-        else if (verticalVelocity < -0.05f)
-        {
-            currentState = MovementState.Falling;
-        }
-    }
+    // Only airborne state is Jumping now
+    currentState = MovementState.Jumping;
+}
 
     /// <summary>
     /// Crouch geometry and lerp helpers
@@ -816,6 +805,7 @@ public class Movement : MonoBehaviour
     public bool IsGrounded => isGrounded;
     public bool IsCrouching => isCrouching;
     public float CurrentMoveSpeed => moveSpeedRuntime;
+    public SurfaceType CurrentSurface { get; private set; } = SurfaceType.Wood;
     #endregion
 
     /// <summary>
@@ -867,6 +857,16 @@ public class Movement : MonoBehaviour
             lastSlopeAngleDeg = Vector3.Angle(hit.normal, Vector3.up);
             isOnSteepSlope = lastSlopeAngleDeg > maxWalkableSlopeDegrees;
 
+            PhysicsMaterial pm = hit.collider != null ? hit.collider.sharedMaterial : null;
+
+            // Default to Wood
+            CurrentSurface = SurfaceType.Wood;
+
+            if (pm != null && pm.name == "Metal")
+            {
+                CurrentSurface = SurfaceType.Metal;
+            }
+
             return true;
         }
 
@@ -903,6 +903,8 @@ public class Movement : MonoBehaviour
         lastGroundNormal = cachedUp;
         lastSlopeAngleDeg = 0f;
         isOnSteepSlope = false;
+
+        CurrentSurface = SurfaceType.Wood;
 
         return false;
     }
