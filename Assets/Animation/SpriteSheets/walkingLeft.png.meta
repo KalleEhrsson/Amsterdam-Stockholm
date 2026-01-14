@@ -100,10 +100,10 @@ TextureImporter:
       name: walkingLeft_1
       rect:
         serializedVersion: 2
-        x: 2313
+        x: 2408
         y: 23
-        width: 373
-        height: 677
+        width: 278
+        height: 671
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -188,9 +188,9 @@ TextureImporter:
       name: walkingLeft_5
       rect:
         serializedVersion: 2
-        x: 5397
+        x: 5492
         y: 23
-        width: 373
+        width: 278
         height: 677
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -266,8 +266,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7a39e777ea26e2243bc34528d00a390e
-      internalID: 2029747703
+      spriteID: 58d5452631df0644e9d7796e31d290c7
+      internalID: -2084970953
       vertices: []
       indices: 
       edges: []
@@ -286,25 +286,25 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":8.0,"y":1.0},"gridSpriteSize":{"x":771.0,"y":717.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":8.0,"y":1.0},"gridSpriteSize":{"x":771.0,"y":716.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       walkingLeft_0: -967724199
       walkingLeft_1: -720004599
-      walkingLeft_10: 1657964938
-      walkingLeft_11: -1702247936
-      walkingLeft_12: -1642017544
-      walkingLeft_13: 376985363
-      walkingLeft_14: 1389707841
-      walkingLeft_15: 880301352
-      walkingLeft_16: -215171152
+      walkingLeft_10: 50381705
+      walkingLeft_11: 79730735
+      walkingLeft_12: 1222679403
+      walkingLeft_13: 293131048
+      walkingLeft_14: 813956844
+      walkingLeft_15: 1235761342
+      walkingLeft_16: 1920475664
       walkingLeft_2: -273478826
       walkingLeft_3: 1749306565
       walkingLeft_4: 500786064
       walkingLeft_5: -147543675
       walkingLeft_6: 1496151491
       walkingLeft_7: -1801126119
-      walkingLeft_8: 2029747703
-      walkingLeft_9: -1217235900
+      walkingLeft_8: -2084970953
+      walkingLeft_9: 85762652
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

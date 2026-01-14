@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: fb146e442cf04a64a821a6a5b06650a8
+guid: 8a2be5773cb1ab34d9f6411b2351997c
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -48,7 +48,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 50
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: walkingRight_0
+      name: hoppR_0
       rect:
         serializedVersion: 2
-        x: 1854
-        y: 3
-        width: 402
-        height: 713
+        x: 887
+        y: 70
+        width: 179
+        height: 333
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,20 +112,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2cbc718e83d574d4d9394e64421a6fee
-      internalID: 659445866
+      spriteID: 0e3bea94a8b199740a31e6fff0b0b7f7
+      internalID: -708368043
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_2
+      name: hoppR_1
       rect:
         serializedVersion: 2
-        x: 398
-        y: 21
-        width: 278
-        height: 678
+        x: 1102
+        y: 130
+        width: 168
+        height: 320
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -134,20 +134,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a77f0e8a6f2ed3b4ebc1a2b8212a65b0
-      internalID: 1791055821
+      spriteID: d1eaca055466aa547ab580ebde658b5f
+      internalID: 540272706
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_3
+      name: hoppR_2
       rect:
         serializedVersion: 2
-        x: 1128
-        y: 18
-        width: 337
-        height: 684
+        x: 1321
+        y: 77
+        width: 164
+        height: 366
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -156,20 +156,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a5931e182bb7ecf4a817779598986e09
-      internalID: -1158479725
+      spriteID: 79d7ca7443acf4846a64e18ecf2a53d0
+      internalID: -1373749939
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_4
+      name: hoppR_5
       rect:
         serializedVersion: 2
-        x: 2670
-        y: 18
-        width: 337
-        height: 684
+        x: 15
+        y: 2
+        width: 144
+        height: 335
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -178,20 +178,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c02f20770bcb197428875bd4ae7dd5b4
-      internalID: -1110775348
+      spriteID: 72df56e3a0c84d04bb83a156a41fabce
+      internalID: 418536068
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_5
+      name: hoppR_6
       rect:
         serializedVersion: 2
-        x: 3483
-        y: 21
-        width: 277
-        height: 678
+        x: 237
+        y: 1
+        width: 176
+        height: 316
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -200,20 +200,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ced48e45fbec1f94eb010c137bbffee3
-      internalID: 31265606
+      spriteID: 45b8953bd3fe85a4a9b783287beba7c4
+      internalID: -900477692
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_9
+      name: hoppR_7
       rect:
         serializedVersion: 2
-        x: 4249
+        x: 438
         y: 0
-        width: 278
-        height: 696
+        width: 212
+        height: 308
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -222,20 +222,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 34d140009d38feb4b8dacb348b7bc836
-      internalID: 1624308209
+      spriteID: 0bac3a51afc5df04faa1cee7ec951e65
+      internalID: 1986150663
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_10
+      name: hoppR_8
       rect:
         serializedVersion: 2
-        x: 5010
-        y: 14
-        width: 334
-        height: 684
+        x: 678
+        y: 12
+        width: 174
+        height: 333
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -244,20 +244,42 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 035dfd5cf6ba91a44af168832ff6158f
-      internalID: -1785716423
+      spriteID: 8b2957bcba90ace429b0e3b5a1eba73f
+      internalID: 432271899
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkingRight_11
+      name: hoppR_9
       rect:
         serializedVersion: 2
-        x: 5789
+        x: 1536
+        y: 13
+        width: 174
+        height: 387
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2080935a4b00aa8469c2d890bc049423
+      internalID: -584862837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hoppR_10
+      rect:
+        serializedVersion: 2
+        x: 1767
         y: 0
-        width: 280
-        height: 696
+        width: 151
+        height: 324
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -266,8 +288,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a089e5bd116379f40a16023a0af76f10
-      internalID: -160846773
+      spriteID: 1425fd4b185c7e94bb3c75dd1ca7d311
+      internalID: -2065170310
       vertices: []
       indices: 
       edges: []
@@ -276,7 +298,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: f87497e1a903aac49bb8318b2bd519be
+    spriteID: 924dc82efdfa41c4b940e00948bf1101
     internalID: 0
     vertices: []
     indices: 
@@ -286,24 +308,19 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":8.0,"y":1.0},"gridSpriteSize":{"x":771.0,"y":716.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
-      - key: SpriteEditor.SliceOnImport
-        value: False
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":4.0,"y":1.0},"gridSpriteSize":{"x":486.0,"y":688.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      walkingRight_0: 659445866
-      walkingRight_1: -1523310295
-      walkingRight_10: -1785716423
-      walkingRight_11: -160846773
-      walkingRight_12: 1158846740
-      walkingRight_13: 1320427099
-      walkingRight_2: 1791055821
-      walkingRight_3: -1158479725
-      walkingRight_4: -1110775348
-      walkingRight_5: 31265606
-      walkingRight_6: 2028636953
-      walkingRight_7: 1482980255
-      walkingRight_8: -695108294
-      walkingRight_9: 1624308209
+      hoppR_0: -708368043
+      hoppR_1: 540272706
+      hoppR_10: -2065170310
+      hoppR_2: -1373749939
+      hoppR_3: 1205620612
+      hoppR_4: 1221279151
+      hoppR_5: 418536068
+      hoppR_6: -900477692
+      hoppR_7: 1986150663
+      hoppR_8: 432271899
+      hoppR_9: -584862837
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

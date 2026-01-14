@@ -47,6 +47,7 @@ public class Movement : MonoBehaviour
     public bool FacingRight { get; private set; } = true;
     public float HorizontalInput { get; private set; }
     public float MoveX { get; private set; }  
+    public float IdleX { get; private set; } = 1f;
     public float HorizontalSpeedNormalized { get; private set; }
     public float VerticalVelocity { get; private set; }
     #endregion
@@ -245,15 +246,16 @@ public class Movement : MonoBehaviour
 
         if (Mathf.Abs(h) > 0.01f)
         {
+            MoveX = Mathf.Sign(h);
+            IdleX = MoveX;
             FacingRight = h > 0f;
-            MoveX = Mathf.Sign(h); // -1 or +1
         }
         else
         {
-            MoveX = FacingRight ? 1f : -1f; // keep last direction for idle aniamtion
+            MoveX = 0f;
         }
     }
-
+    
     private void FixedUpdate()
     {
         // Keep cached transform axes fresh for physics-step methods.
@@ -496,9 +498,15 @@ public class Movement : MonoBehaviour
         if (!isGrounded || isCrouching)
             return;
 
-        // Do not overwrite Jumping/Falling/Crouching states.
-        if (currentState == MovementState.Jumping || currentState == MovementState.Falling || currentState == MovementState.Crouching)
+         if (currentState == MovementState.Crouching)
             return;
+
+            // Safety: if we landed but missed the explicit land transition, force a locomotion state.
+        if (currentState == MovementState.Jumping || currentState == MovementState.Falling)
+        {
+            if (rb != null && rb.linearVelocity.y > 0.05f)
+                return;
+        }
 
         float h = Input.GetAxis("Horizontal");
         currentState = Mathf.Abs(h) > 0.1f
@@ -838,11 +846,12 @@ public class Movement : MonoBehaviour
 
         Vector3 origin = GetGroundCheckPosition();
         float radius = cachedColRadius * groundSphereRadiusMultiplier;
-
-        // Tiny cast distance makes it stable across small bumps and solver jitter.
         float castDistance = groundCastDistance;
 
-        if (Physics.SphereCast(
+        int walkableLayerIndex = LayerMask.NameToLayer("Walkable");
+
+        // ---- Primary SphereCast (Walkable only) ----
+        bool hitWalkable = Physics.SphereCast(
             origin,
             radius,
             -cachedUp,
@@ -850,21 +859,32 @@ public class Movement : MonoBehaviour
             castDistance,
             groundLayer,
             QueryTriggerInteraction.Ignore
-        ))
-        {
-            // Record the ground normal we hit so movement can be projected onto slopes.
-            lastGroundNormal = hit.normal;
+        );
 
-            // Record slope angle relative to world up and whether it's considered steep.
+        if (hitWalkable)
+        {
+            lastGroundNormal = hit.normal;
             lastSlopeAngleDeg = Vector3.Angle(hit.normal, Vector3.up);
             isOnSteepSlope = lastSlopeAngleDeg > maxWalkableSlopeDegrees;
 
             return true;
         }
 
-        // Fallback: if we're extremely close to the ground, an overlap check can still mark us grounded.
+        // ---- DEBUG: did we hit something BUT filtered by layer? ----
+        bool hitAnything = Physics.SphereCast(
+            origin,
+            radius,
+            -cachedUp,
+            out RaycastHit anyHit,
+            castDistance,
+            Physics.AllLayers,
+            QueryTriggerInteraction.Ignore
+        );
+
+        // ---- Fallback overlap ----
         Vector3 overlapCenter = origin - cachedUp * (groundBottomBias + 0.01f);
         float overlapRadius = Mathf.Max(0f, radius * 0.98f);
+
         if (Physics.CheckSphere(
             overlapCenter,
             overlapRadius,
@@ -875,10 +895,11 @@ public class Movement : MonoBehaviour
             lastGroundNormal = cachedUp;
             lastSlopeAngleDeg = 0f;
             isOnSteepSlope = false;
+
             return true;
         }
 
-        // No ground hit: reset slope info and indicate not grounded.
+        // ---- No ground ----
         lastGroundNormal = cachedUp;
         lastSlopeAngleDeg = 0f;
         isOnSteepSlope = false;

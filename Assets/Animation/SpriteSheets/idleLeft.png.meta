@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 10d2d668f94bf7d46868a2a98e409457
+guid: 40b9531282193ed4ea423b130dbb6bbc
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,78 +97,12 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: idleLeft_0
+      name: idel L_0
       rect:
         serializedVersion: 2
-        x: 6
+        x: 208
         y: 0
-        width: 283
-        height: 688
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 87e81a1f11db1ba4fa3f3eafb4ee2914
-      internalID: -1944575271
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: idleLeft_1
-      rect:
-        serializedVersion: 2
-        x: 499
-        y: 0
-        width: 284
-        height: 681
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 15574d9bc9c15aa4eb00955005fe5cb8
-      internalID: 753103175
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: idleLeft_2
-      rect:
-        serializedVersion: 2
-        x: 974
-        y: 0
-        width: 295
-        height: 664
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 1a2ed8bad4f73e94a92b3eaa4cb33ed5
-      internalID: 1329250166
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: idleLeft_3
-      rect:
-        serializedVersion: 2
-        x: 1455
-        y: 0
-        width: 277
+        width: 291
         height: 676
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -178,8 +112,74 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 571a50c6612a3614c867b324758b4b56
-      internalID: 2075152924
+      spriteID: c4b6d9fd3282156468bd156a7f157a2e
+      internalID: 479614470
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: idel L_1
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 0
+        width: 305
+        height: 664
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 59009ce2dab8f854497e4d74dcb6f9d0
+      internalID: -147892491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: idel L_2
+      rect:
+        serializedVersion: 2
+        x: 1159
+        y: 0
+        width: 310
+        height: 681
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1701e6b22c35627449c677dc7f2e6dc6
+      internalID: 86341580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: idel L_3
+      rect:
+        serializedVersion: 2
+        x: 1653
+        y: 0
+        width: 281
+        height: 688
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a6cbb191a7618444bf612fce6dca0f6
+      internalID: -1765355254
       vertices: []
       indices: 
       edges: []
@@ -188,7 +188,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 32f09589b797f7b43af12d8faa395e26
+    spriteID: 858ec9905cf0f754583e3ecf5cd37c04
     internalID: 0
     vertices: []
     indices: 
@@ -200,10 +200,10 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      idleLeft_0: -1944575271
-      idleLeft_1: 753103175
-      idleLeft_2: 1329250166
-      idleLeft_3: 2075152924
+      idel L_0: 479614470
+      idel L_1: -147892491
+      idel L_2: 86341580
+      idel L_3: -1765355254
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

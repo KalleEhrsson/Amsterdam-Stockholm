@@ -10,12 +10,13 @@ public sealed class PlayerAnimationController : MonoBehaviour
     [Header("Animator Parameters")]
     [SerializeField] private string stateParam = "State";
     [SerializeField] private string speedParam = "Speed";
-    [SerializeField] private string moveXParam = "MoveX";
     [SerializeField] private string facingRightParam = "FacingRight";
     [SerializeField] private string verticalVelocityParam = "VerticalVelocity";
-    [SerializeField] private string groundedParam = "Grounded";
+    [SerializeField] private string groundedParam = "IsGrounded";
     [SerializeField] private string jumpTrigger = "Jump";
     [SerializeField] private string landTrigger = "Land";
+    [SerializeField] private string moveXParam = "MoveX";
+    [SerializeField] private string idleXParam = "IdleX";
     #endregion
 
     #region Cached
@@ -62,11 +63,15 @@ public sealed class PlayerAnimationController : MonoBehaviour
             return;
 
         animator.SetInteger(stateParam, (int)movement.CurrentState);
-        animator.SetFloat(moveXParam, movement.MoveX);
+
         animator.SetFloat(speedParam, movement.HorizontalSpeedNormalized);
         animator.SetFloat(verticalVelocityParam, movement.VerticalVelocity);
+
         animator.SetBool(groundedParam, movement.IsGrounded);
-        animator.SetBool(facingRightParam, movement.FacingRight);
+        // animator.SetBool(facingRightParam, movement.FacingRight);
+
+        animator.SetFloat(moveXParam, movement.MoveX);
+        animator.SetFloat(idleXParam, movement.IdleX);
     }
     #endregion
 
