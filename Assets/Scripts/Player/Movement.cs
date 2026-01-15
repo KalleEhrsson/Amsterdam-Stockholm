@@ -6,8 +6,10 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     // Simple movement state machine
-    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Falling = 3, Crouching = 4 }
+    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Falling = 3, Crouching = 4, Ladder = 5 }
     private MovementState currentState = MovementState.Idle;
+    
+    public enum SurfaceType { Wood = 0, Metal = 1 }
 
     // Expose current state for external systems
     public MovementState CurrentState => currentState;
@@ -37,6 +39,7 @@ public class Movement : MonoBehaviour
     public event Action OnLand;
     public event Action OnJump;
     public event Action OnLeaveGround;
+    public event Action OnInteract;
     #endregion
     #endregion
 
@@ -48,6 +51,8 @@ public class Movement : MonoBehaviour
     public float HorizontalInput { get; private set; }
     public float HorizontalSpeedNormalized { get; private set; }
     public float VerticalVelocity { get; private set; }
+    public float MoveX => HorizontalInput;
+    public float IdleX => FacingRight ? 1f : -1f;
     #endregion
 
     /// <summary>
@@ -120,6 +125,63 @@ public class Movement : MonoBehaviour
     [SerializeField] private float crouchJumpMultiplier = 0.6f;
     #endregion
 
+    #region Inspector: Ladder
+
+    [Header("Ladder Settings")] [SerializeField]
+    private float ladderClimbSpeed = 3.5f;
+
+    [Tooltip("How quickly the player snaps to the ladder center (higher = snappier.")] [SerializeField]
+    private float ladderSnapSpeed = 25f;
+    
+    [Tooltip("How quickly the player rotates to match the ladder axis (higher = snappier).")]
+    [SerializeField] private float ladderRotateSpeed = 18f;
+    [SerializeField] private float uprightRotateSpeed = 22f;
+
+    [Tooltip("Detach if player pushes sideways while on ladder.")]
+    [SerializeField] private bool detachOnHorizontalInput = true;
+
+    [SerializeField] private float detachHorizontalThreshold = 0.6f;
+
+    [Tooltip("Small push when jumping off ladder.")] 
+    [SerializeField] private float ladderJumpOffHorizontalSpeed = 2.5f;
+    
+    [Header("Ladder Step-Off")]
+    [SerializeField] private bool ladderStepOffAtTop = true;
+
+    [Tooltip("How close to the ladder top (along ladder axis) before stepping off.")]
+    [SerializeField] private float ladderTopStepOffDistance = 0.12f;
+
+    [Tooltip("Offset along ladder axis when stepping off (prevents clipping).")]
+    [SerializeField] private float ladderStepOffUpOffset = 0.08f;
+
+    [Tooltip("Offset away from ladder when stepping off.")]
+    [SerializeField] private float ladderStepOffSideOffset = 0.35f;
+    #endregion
+    
+    #region Ladder State
+    public bool IsOnLadder => isOnLadder;
+    public Ladder CurrentLadder => currentLadder;
+
+    private bool isOnLadder;
+    private Ladder currentLadder;
+    private bool ladderPrevUseGravity;
+    
+    [SerializeField] private bool ladderDebugLogs = true;
+    [SerializeField] private float ladderDebugInterval = 0.25f;
+    private float ladderDebugTimer;
+    private RigidbodyConstraints ladderPrevConstraints;
+
+    private float VerticalInput { get; set; }
+
+    private float prevZRotationBeforeLadder;
+    
+    [SerializeField] private float ladderAttachGraceTime = 0.12f;
+    private float ladderAttachGraceTimer;
+    
+    [SerializeField] private float ladderSurfacePadding = 0.02f;
+    private readonly List<Collider> ignoredLadderColliders = new();
+    #endregion
+
     /// <summary>
     /// Component references and cached geometry
     /// </summary>
@@ -139,7 +201,7 @@ public class Movement : MonoBehaviour
     /// Runtime jump-related timers and flags
     /// </summary>
     #region Jump State
-    [SerializeField] bool isGrounded;
+    bool isGrounded;
     private float jumpBufferCounter;
     private float coyoteCounter;
     #endregion
@@ -227,20 +289,16 @@ public class Movement : MonoBehaviour
     {
         // Keep cached transform axes fresh for methods called from Update.
         UpdateCachedTransform();
-
-        jumpBufferCounter = Input.GetButtonDown("Jump")
-            ? jumpBufferTime
-            : Mathf.Max(jumpBufferCounter - Time.deltaTime, 0f);
-
-        // Crouch input
-        bool crouchHeld = Input.GetKey(KeyCode.LeftControl);
-        if (crouchHeld)
-            StartCrouch();
-        else
-            TryStand();
+        
+        UpdateJumpBuffer();
+        HandleCrouchInput();
+        HandleInteractInput();
 
         float h = Input.GetAxis("Horizontal");
         HorizontalInput = h;
+        
+        float v = Input.GetAxisRaw("Vertical");
+        VerticalInput = v;
         
         if (Mathf.Abs(h) > 0.01f)
             FacingRight = h > 0f;
@@ -250,6 +308,15 @@ public class Movement : MonoBehaviour
     {
         // Keep cached transform axes fresh for physics-step methods.
         UpdateCachedTransform();
+        
+        if (isOnLadder)
+        {
+            HandleLadderMovement();
+        }
+        else
+        {
+            UpdateUprightRotation();
+        }
 
         // Cache ground check once per physics step to avoid duplicate Physics queries.
         bool prevGrounded = isGrounded;
@@ -261,10 +328,10 @@ public class Movement : MonoBehaviour
         else
             steepSlopeTimer = 0f;
 
-    // Slip when the slope is steeper than maxWalkableSlopeDegrees AND either the grace time expired
-    // or the uphill speed multiplier has decayed to (almost) zero. This allows gradual uphill decay
-    // before full slipping begins.
-    bool isSlippingOnSteepSlope = groundHit && isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
+        // Slip when the slope is steeper than maxWalkableSlopeDegrees AND either the grace time expired
+        // or the uphill speed multiplier has decayed to (almost) zero. This allows gradual uphill decay
+        // before full slipping begins.
+        bool isSlippingOnSteepSlope = groundHit && isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
 
         // Consider the player grounded only when we hit and are not slipping due to a steep slope.
         isGrounded = groundHit && !isSlippingOnSteepSlope;
@@ -322,21 +389,47 @@ public class Movement : MonoBehaviour
     /// Movement handling (horizontal, wall/ground projection)
     /// </summary>
     #region Movement
+    private void UpdateJumpBuffer()
+    {
+        jumpBufferCounter = Input.GetButtonDown("Jump")
+            ? jumpBufferTime
+            : Mathf.Max(jumpBufferCounter - Time.deltaTime, 0f);
+    }
+
+    private void HandleCrouchInput()
+    {
+        if (isOnLadder)
+            return;
+        
+        bool crouchHeld = Input.GetKey(KeyCode.LeftControl);
+        if (crouchHeld)
+            StartCrouch();
+        else
+            TryStand();
+    }
+
+    private void HandleInteractInput()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+            OnInteract?.Invoke();
+    }
+    
     private void HandleHorizontalMovement()
     {
         if (rb == null)
             return;
 
-    // Are we currently slipping because the slope is too steep?
-    // We allow a grace period or until uphillSpeedMultiplier decays to near zero before full slip.
-    bool isSlippingOnSteepSlope = isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
+        // Are we currently slipping because the slope is too steep?
+        // We allow a grace period or until uphillSpeedMultiplier decays to near zero before full slip.
+        bool isSlippingOnSteepSlope = isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
 
         float moveInput = Input.GetAxis("Horizontal");
-    // Compute the true base runtime speed from baseSpeedRuntime plus slows/external multipliers.
-    // Do NOT read from moveSpeedRuntime here because moveSpeedRuntime is used as a display
-    // value and may have been overwritten earlier. Using baseSpeedRuntime ensures the
-    // movement math uses the real runtime speed and will return to default after sliding.
-    float baseRuntimeSpeed = baseSpeedRuntime * slowMultiplierTotal * externalSpeedMultiplier;
+        
+        // Compute the true base runtime speed from baseSpeedRuntime plus slows/external multipliers.
+        // Do NOT read from moveSpeedRuntime here because moveSpeedRuntime is used as a display
+        // value and may have been overwritten earlier. Using baseSpeedRuntime ensures the
+        // movement math uses the real runtime speed and will return to default after sliding.
+        float baseRuntimeSpeed = baseSpeedRuntime * slowMultiplierTotal * externalSpeedMultiplier;
 
         Vector3 inputDir = cachedRight * moveInput;
 
@@ -423,7 +516,7 @@ public class Movement : MonoBehaviour
         else
         {
             desired = inputDir * currentSpeed;
-            // When not grounded we should restore uphill movement multiplier so mid-air control isn't penalized.
+            // When not grounded we should restore uphill movement multiplier so midair control isn't penalized.
             uphillSpeedMultiplier = 1f;
         }
 
@@ -438,33 +531,38 @@ public class Movement : MonoBehaviour
         // along the ground normal so they don't 'hop' on small geometry when walking uphill.
         if (isGrounded && v.y <= 0.1f)
         {
-            v += -lastGroundNormal * groundStickForce * Time.fixedDeltaTime;
+            float stickScale = -groundStickForce * Time.fixedDeltaTime;
+            v += lastGroundNormal * stickScale;
         }
 
         // If we're on a steep slope (regardless of whether we are still considered grounded), apply sliding.
         if (isOnSteepSlope)
         {
-            // If we've exceeded the grace time, immediately stop player-driven horizontal movement
-            // and nudge the player downward to start falling; sliding will still be applied below.
             if (isSlippingOnSteepSlope)
             {
                 v.x = 0f;
                 v.z = 0f;
                 currentState = MovementState.Falling;
+
                 if (v.y > -0.5f)
                     v.y = -0.5f;
             }
 
             // Gravity projected onto the ground plane gives the downhill direction.
-            Vector3 slideDir = Vector3.ProjectOnPlane(Physics.gravity, lastGroundNormal).normalized;
+            Vector3 slide = Vector3.ProjectOnPlane(Physics.gravity, lastGroundNormal);
 
-            // Use the recorded lastSlopeAngleDeg (computed in ComputeIsGrounded) so we don't recompute.
-            float slideFactor = Mathf.InverseLerp(maxWalkableSlopeDegrees, 90f, lastSlopeAngleDeg);
+            // If the normal is weird or gravity aligns with it, projection can be tiny.
+            if (slide.sqrMagnitude > 0.0001f)
+            {
+                Vector3 slideDir = slide.normalized;
 
-            // Stronger sliding when fully slipping, reduced when still in the grace window.
-            float strengthMultiplier = isSlippingOnSteepSlope ? 1f : 0.35f;
+                float slideFactor = Mathf.InverseLerp(maxWalkableSlopeDegrees, 90f, lastSlopeAngleDeg);
+                float strengthMultiplier = isSlippingOnSteepSlope ? 1f : 0.35f;
 
-            v += slideDir * slopeSlideAcceleration * slideFactor * strengthMultiplier * Time.fixedDeltaTime;
+                float slideScale = slopeSlideAcceleration * slideFactor * strengthMultiplier * Time.fixedDeltaTime;
+
+                v += slideDir * slideScale;
+            }
         }
 
         rb.linearVelocity = v;
@@ -515,7 +613,7 @@ public class Movement : MonoBehaviour
         }
     }
 
-    private void OnCollisionExit(Collision collision)
+    private void OnCollisionExit(Collision _)
     {
         hasWallNormal = false;
     }
@@ -572,7 +670,8 @@ public class Movement : MonoBehaviour
         // Falling: apply stronger gravity for snappier falls.
         if (v.y < 0f)
         {
-            v += Physics.gravity * (fallMultiplier - 1f) * Time.fixedDeltaTime;
+            float gravityScale = (fallMultiplier - 1f) * Time.fixedDeltaTime;
+            v += Physics.gravity * gravityScale;
             rb.linearVelocity = v;
             return;
         }
@@ -580,7 +679,8 @@ public class Movement : MonoBehaviour
         // Ascending but jump button released: cut the jump by applying extra gravity.
         if (v.y > 0f && !Input.GetButton("Jump"))
         {
-            v += Physics.gravity * (lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
+            float gravityScale = (lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
+            v += Physics.gravity * gravityScale;
             rb.linearVelocity = v;
         }
     }
@@ -595,8 +695,7 @@ public class Movement : MonoBehaviour
 
         if (verticalVelocity > 0.05f)
         {
-            if (currentState != MovementState.Jumping)
-                currentState = MovementState.Jumping;
+            currentState = MovementState.Jumping;
         }
         else if (verticalVelocity < -0.05f)
         {
@@ -803,6 +902,7 @@ public class Movement : MonoBehaviour
     public bool IsGrounded => isGrounded;
     public bool IsCrouching => isCrouching;
     public float CurrentMoveSpeed => moveSpeedRuntime;
+    public SurfaceType CurrentSurface { get; set; }
     #endregion
 
     /// <summary>
@@ -926,6 +1026,351 @@ public class Movement : MonoBehaviour
 
         groundLayer = 1 << layerIndex;
     }
+    
+    #region Ladder
+    public void TryAttachToLadder(Ladder ladder)
+    {
+        if (ladder == null)
+            return;
+
+        if (isOnLadder)
+            return;
+
+        if (rb == null)
+            return;
+
+        if (isCrouching)
+            return;
+
+        isOnLadder = true;
+        currentLadder = ladder;
+        
+        ladderAttachGraceTimer = ladderAttachGraceTime;
+        SetLadderCollisionIgnored(ladder, true);
+
+        ladderPrevUseGravity = rb.useGravity;
+        rb.useGravity = false;
+        
+        prevZRotationBeforeLadder = tr.eulerAngles.z;
+        ladderPrevConstraints = rb.constraints;
+
+        // 2.5D typical: keep Z position fixed, allow Z rotation to tilt with ladder.
+        // Freeze X/Y rotation so physics cannot tip the character forward/back.
+        rb.constraints =
+            RigidbodyConstraints.FreezePositionZ |
+            RigidbodyConstraints.FreezeRotationX |
+            RigidbodyConstraints.FreezeRotationY;
+
+        Vector3 v = rb.linearVelocity;
+        v.y = 0f;
+        rb.linearVelocity = v;
+
+        currentState = MovementState.Ladder;
+        
+        if (ladderDebugLogs)
+            Debug.Log($"[Ladder] ATTACH -> {ladder.name}", this);
+    }
+
+    public void DetachFromLadder(bool jumpOff)
+    {
+        if (!isOnLadder)
+            return;
+             
+        if (!isOnLadder)
+            return;
+        
+        if (ladderDebugLogs)
+            Debug.Log($"[Ladder] DETACH <- {(currentLadder != null ? currentLadder.name : "null")} jumpOff={jumpOff}", this);
+
+        SetLadderCollisionIgnored(currentLadder, false);
+        
+        if (rb != null)
+            rb.useGravity = ladderPrevUseGravity;
+        
+        rb.constraints = ladderPrevConstraints;
+
+        isOnLadder = false;
+        
+        if (rb != null && currentLadder != null)
+        {
+            Vector3 axis = currentLadder.GetClimbAxis();
+            Vector3 v = rb.linearVelocity;
+
+            // Remove any velocity along the ladder axis so we don't keep "climbing" in air
+            v -= axis * Vector3.Dot(v, axis);
+
+            rb.linearVelocity = v;
+        }
+
+        currentLadder = null;
+
+        if (rb == null)
+            return;
+
+        if (jumpOff)
+        {
+            Vector3 v = rb.linearVelocity;
+            v.y = jumpForce;
+
+            float dir = FacingRight ? 1f : -1f;
+            v.x = dir * ladderJumpOffHorizontalSpeed;
+
+            rb.linearVelocity = v;
+
+            OnJump?.Invoke();
+            currentState = MovementState.Jumping;
+        }
+        else
+        {
+            float h = Mathf.Abs(HorizontalInput);
+            currentState = h > 0.1f ? MovementState.Walking : MovementState.Idle;
+        }
+    }
+
+    private void HandleLadderMovement()
+    {
+        if (rb == null)
+            return;
+
+        if (currentLadder == null)
+        {
+            DetachFromLadder(false);
+            return;
+        }
+
+        if (ladderAttachGraceTimer > 0f)
+            ladderAttachGraceTimer -= Time.fixedDeltaTime;
+
+        Vector3 axis = currentLadder.GetClimbAxis();
+        Vector3 basePoint = currentLadder.GetSnapWorldPosition();
+
+        // Spine point = projection onto ladder axis line (stable for angled ladders)
+        Vector3 toPlayer = tr.position - basePoint;
+        float along = Vector3.Dot(toPlayer, axis);
+        Vector3 spinePoint = basePoint + axis * along;
+
+        // Compute an outward direction so we stay in front of the ladder surface (never inside it)
+        Vector3 surfacePoint = currentLadder.GetClosestPoint(tr.position);
+        Vector3 outward = tr.position - surfacePoint;
+
+        // Remove any component along the ladder axis (we want sideways/outward only)
+        outward -= axis * Vector3.Dot(outward, axis);
+
+        if (outward.sqrMagnitude < 0.0001f)
+            outward = Vector3.ProjectOnPlane(cachedRight, axis);
+
+        if (outward.sqrMagnitude < 0.0001f)
+            outward = Vector3.right;
+
+        outward = outward.normalized;
+
+        float playerRadius = col != null ? col.radius : 0.25f;
+
+        // Target position is spine + outward offset so capsule and ladder do not touch
+        Vector3 targetPos = spinePoint + outward * (playerRadius + ladderSurfacePadding);
+
+        // Detach distance should match the “no touch” rule:
+        // stay attached if we're within ladder lateral radius + playerRadius + padding.
+        float ladderRadius = GetLadderLateralRadius(currentLadder, axis);
+        float detachDistance = ladderRadius + playerRadius + ladderSurfacePadding + 0.02f;
+
+        float lateralDist = Vector3.Distance(tr.position, targetPos);
+
+        if (ladderAttachGraceTimer <= 0f && lateralDist > detachDistance)
+        {
+            DetachFromLadder(false);
+            return;
+        }
+
+        currentState = MovementState.Ladder;
+
+        // Rotate player upright relative to ladder axis
+        Vector3 forward = Vector3.forward;
+        if (Mathf.Abs(Vector3.Dot(forward, axis)) > 0.98f)
+            forward = cachedRight;
+
+        Quaternion targetRot = Quaternion.LookRotation(forward, axis);
+        float rotT = 1f - Mathf.Exp(-ladderRotateSpeed * Time.fixedDeltaTime);
+        rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRot, rotT));
+
+        // Snap toward target position (spine + outward offset)
+        float snapT = 1f - Mathf.Exp(-ladderSnapSpeed * Time.fixedDeltaTime);
+        tr.position = Vector3.Lerp(tr.position, targetPos, snapT);
+
+        // Step off at top (only when moving up)
+        if (ladderStepOffAtTop && VerticalInput > 0.1f)
+        {
+            Vector3 top = currentLadder.GetTopPoint();
+            float alongToTop = Vector3.Dot(top - tr.position, axis);
+
+            if (alongToTop <= ladderTopStepOffDistance)
+            {
+                StepOffLadderTop();
+                return;
+            }
+        }
+
+        // Jump off ladder
+        if (Input.GetButtonDown("Jump"))
+        {
+            DetachFromLadder(true);
+            return;
+        }
+
+        // Detach by pushing sideways away from the ladder
+        if (detachOnHorizontalInput && ladderAttachGraceTimer <= 0f)
+        {
+            Vector3 sideways = Vector3.ProjectOnPlane(cachedRight, axis).normalized;
+
+            if (sideways.sqrMagnitude > 0.0001f)
+            {
+                float sideOffset = Vector3.Dot(tr.position - targetPos, sideways);
+                float input = HorizontalInput;
+
+                bool pushingAway =
+                    (sideOffset < -0.01f && input < -detachHorizontalThreshold) ||
+                    (sideOffset >  0.01f && input >  detachHorizontalThreshold);
+
+                if (pushingAway)
+                {
+                    DetachFromLadder(false);
+                    return;
+                }
+            }
+        }
+
+        // Climb along ladder axis
+        float vInput = VerticalInput;
+
+        Vector3 v = rb.linearVelocity;
+
+        v -= axis * Vector3.Dot(v, axis);
+        v += axis * (vInput * ladderClimbSpeed);
+
+        rb.linearVelocity = v;
+
+        if (ladderDebugLogs)
+        {
+            ladderDebugTimer -= Time.fixedDeltaTime;
+            if (ladderDebugTimer <= 0f)
+            {
+                ladderDebugTimer = Mathf.Max(0.05f, ladderDebugInterval);
+
+                float velAlong = Vector3.Dot(rb.linearVelocity, axis);
+                Debug.Log($"[Ladder] vInput={vInput:0.00} velAlong={velAlong:0.00} lateralDist={lateralDist:0.000} detachDist={detachDistance:0.000} grace={ladderAttachGraceTimer:0.000}", this);
+            }
+        }
+
+        VerticalVelocity = Vector3.Dot(rb.linearVelocity, axis);
+    }
+
+    private float GetLadderLateralRadius(Ladder ladder, Vector3 axis)
+    {
+        Bounds b = ladder.GetWorldBounds();
+        Vector3 c = b.center;
+        Vector3 e = b.extents;
+
+        float best = 0f;
+
+        for (int xi = -1; xi <= 1; xi += 2)
+        for (int yi = -1; yi <= 1; yi += 2)
+        for (int zi = -1; zi <= 1; zi += 2)
+        {
+            Vector3 p = c + new Vector3(e.x * xi, e.y * yi, e.z * zi);
+
+            // Measure only sideways distance to the axis.
+            Vector3 lateral = p - c;
+            lateral -= axis * Vector3.Dot(lateral, axis);
+
+            float d = lateral.magnitude;
+            if (d > best) best = d;
+        }
+
+        return best;
+    }
+    
+    private void UpdateUprightRotation()
+    {
+        if (rb == null)
+            return;
+
+        Quaternion current = rb.rotation;
+        Quaternion target = Quaternion.Euler(0f, 0f, 0f);
+
+        float t = 1f - Mathf.Exp(-uprightRotateSpeed * Time.fixedDeltaTime);
+        rb.MoveRotation(Quaternion.Slerp(current, target, t));
+    }
+    
+    private void StepOffLadderTop()
+    {
+        if (rb == null || currentLadder == null)
+            return;
+
+        Vector3 axis = currentLadder.GetClimbAxis();
+        Vector3 top = currentLadder.GetTopPoint();
+
+        Vector3 sideways = Vector3.ProjectOnPlane(cachedRight, axis).normalized;
+        if (sideways.sqrMagnitude < 0.0001f)
+            sideways = cachedRight;
+
+        float sideSign = Mathf.Abs(HorizontalInput) > 0.1f
+            ? Mathf.Sign(HorizontalInput)
+            : (FacingRight ? 1f : -1f);
+
+        // Stop ladder-axis motion so we don't keep "climbing" in air
+        Vector3 v = rb.linearVelocity;
+        v -= axis * Vector3.Dot(v, axis);
+        rb.linearVelocity = v;
+
+        // Detach first so no ladder logic runs after reposition
+        rb.useGravity = ladderPrevUseGravity;
+        rb.constraints = ladderPrevConstraints;
+
+        isOnLadder = false;
+        currentLadder = null;
+
+        // Place on top and slightly away from ladder
+        tr.position = top
+                      + axis * ladderStepOffUpOffset
+                      + sideways * (sideSign * ladderStepOffSideOffset);
+
+        currentState = Mathf.Abs(HorizontalInput) > 0.1f ? MovementState.Walking : MovementState.Idle;
+    }
+    
+    private void SetLadderCollisionIgnored(Ladder ladder, bool ignored)
+    {
+        if (col == null || ladder == null)
+            return;
+
+        if (ignored)
+        {
+            ignoredLadderColliders.Clear();
+
+            // Grab ladder colliders (root + children). This covers “ladder volume + any extra pieces”.
+            Collider[] ladderCols = ladder.GetComponentsInChildren<Collider>(true);
+            foreach (Collider lc in ladderCols)
+            {
+                if (lc == null)
+                    continue;
+
+                Physics.IgnoreCollision(col, lc, true);
+                ignoredLadderColliders.Add(lc);
+            }
+
+            return;
+        }
+
+        // Restore collisions on detach (including if ladder object got disabled/destroyed).
+        foreach (Collider lc in ignoredLadderColliders)
+        {
+            if (lc != null)
+                Physics.IgnoreCollision(col, lc, false);
+        }
+
+        ignoredLadderColliders.Clear();
+    }
+    #endregion
+
     
     /// <summary>
     /// Debug gizmos to visualize collider and standing capsule

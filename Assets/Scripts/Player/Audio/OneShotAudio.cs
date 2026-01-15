@@ -6,7 +6,6 @@ public enum OneShotId
 {
     Jump = 0,
     Land = 1,
-    ButtonPress = 2
 }
 
 [DisallowMultipleComponent]

@@ -68,7 +68,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
         animator.SetFloat(verticalVelocityParam, movement.VerticalVelocity);
 
         animator.SetBool(groundedParam, movement.IsGrounded);
-        // animator.SetBool(facingRightParam, movement.FacingRight);
+        animator.SetBool(facingRightParam, movement.FacingRight);
 
         animator.SetFloat(moveXParam, movement.MoveX);
         animator.SetFloat(idleXParam, movement.IdleX);

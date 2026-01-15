@@ -130,10 +130,8 @@ public sealed class PlayerWalkAudio : MonoBehaviour
     {
         loopMap.Clear();
 
-        for (int i = 0; i < surfaceLoops.Count; i++)
+        foreach (SurfaceLoopEntry e in surfaceLoops)
         {
-            SurfaceLoopEntry e = surfaceLoops[i];
-
             // Last one wins if duplicates exist
             loopMap[e.surface] = e;
         }
