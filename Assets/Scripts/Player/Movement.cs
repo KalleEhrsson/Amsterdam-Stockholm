@@ -132,6 +132,7 @@ public class Movement : MonoBehaviour
     private Rigidbody rb;
     private CapsuleCollider col;
     private Transform tr;
+    private Transform colTr;
     private Vector3 cachedUp;
     private Vector3 cachedRight;
     private float cachedColRadius;
@@ -139,6 +140,7 @@ public class Movement : MonoBehaviour
     private float cachedBottomOffset;
     private Vector3 cachedColCenterLocal;
     #endregion
+
 
     /// <summary>
     /// Runtime jump-related timers and flags
@@ -180,6 +182,13 @@ public class Movement : MonoBehaviour
     private float uphillSpeedMultiplier = 1f;
     #endregion
 
+    #region Debug Gizmos
+    [SerializeField] private bool gizmo_ShowCollider = true;
+    [SerializeField] private bool gizmo_ShowGroundCast = true;
+    [SerializeField] private bool gizmo_ShowOverlapCheck = false;
+    [SerializeField] private bool gizmo_ShowStandingClearance = true;
+    #endregion
+
     /// <summary>
     /// Unity lifecycle methods (Awake/Start/Update/FixedUpdate)
     /// </summary>
@@ -187,10 +196,12 @@ public class Movement : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        col = GetComponent<CapsuleCollider>();
         tr = transform;
-        
-        CacheColliderGeometry();
+
+        col = GetComponentInChildren<CapsuleCollider>(true);
+        colTr = col != null ? col.transform : transform;
+
+        CacheColliderGeometry();;
         
         cachedUp = tr.up;
         cachedRight = tr.right;
@@ -324,6 +335,12 @@ public class Movement : MonoBehaviour
     {
         if (tr == null)
             tr = transform;
+
+        if (col == null)
+            col = GetComponentInChildren<CapsuleCollider>(true);
+
+        if (colTr == null && col != null)
+            colTr = col.transform;
 
         cachedUp = tr.up;
         cachedRight = tr.right;
@@ -814,19 +831,17 @@ public class Movement : MonoBehaviour
     #region Ground Check
     private Vector3 GetGroundCheckPosition()
     {
-        // Defensive: if collider/transform missing, fallback to transform position.
-        if (col == null || tr == null)
+        if (col == null || colTr == null)
             return transform.position;
-        // Compute a point near the capsule bottom in world space using cached collider geometry.
-        Vector3 worldCenter = tr.TransformPoint(cachedColCenterLocal);
-        Vector3 up = cachedUp;
 
-        float bottomOffset = cachedBottomOffset;
+        Vector3 worldCenter = colTr.TransformPoint(cachedColCenterLocal);
+        Vector3 up = Vector3.up;
 
-        Vector3 bottomSphereCenter = worldCenter - up * bottomOffset;
+        float bottomOffsetWorld = GetWorldBottomOffset();
+        Vector3 bottomSphereCenter = worldCenter - up * bottomOffsetWorld;
 
-        // Small offset downward reduces false negatives on tiny bumps.
-        return bottomSphereCenter + up * groundBottomBias;
+        float biasWorld = groundBottomBias * GetColliderScaleY();
+        return bottomSphereCenter + up * biasWorld;
     }
 
     private bool ComputeIsGrounded()
@@ -835,20 +850,21 @@ public class Movement : MonoBehaviour
             return false;
 
         Vector3 origin = GetGroundCheckPosition();
-        float radius = cachedColRadius * groundSphereRadiusMultiplier;
-        float castDistance = groundCastDistance;
+        float radius = GetWorldRadius() * groundSphereRadiusMultiplier;
+        float castDistance = groundCastDistance * GetColliderScaleY();
+        Vector3 down = Vector3.down;
 
         int walkableLayerIndex = LayerMask.NameToLayer("Walkable");
 
         // ---- Primary SphereCast (Walkable only) ----
         bool hitWalkable = Physics.SphereCast(
-            origin,
-            radius,
-            -cachedUp,
-            out RaycastHit hit,
-            castDistance,
-            groundLayer,
-            QueryTriggerInteraction.Ignore
+        origin,
+        radius,
+        down,
+        out RaycastHit hit,
+        castDistance,
+        groundLayer,
+        QueryTriggerInteraction.Ignore
         );
 
         if (hitWalkable)
@@ -874,7 +890,7 @@ public class Movement : MonoBehaviour
         bool hitAnything = Physics.SphereCast(
             origin,
             radius,
-            -cachedUp,
+            down,
             out RaycastHit anyHit,
             castDistance,
             Physics.AllLayers,
@@ -912,7 +928,10 @@ public class Movement : MonoBehaviour
     private void CacheColliderGeometry()
     {
         if (col == null)
-            col = GetComponent<CapsuleCollider>();
+            col = GetComponentInChildren<CapsuleCollider>(true);
+
+        if (colTr == null && col != null)
+            colTr = col.transform;
 
         if (col == null)
             return;
@@ -922,6 +941,39 @@ public class Movement : MonoBehaviour
         cachedBottomOffset = cachedHalfHeight - col.radius;
         cachedColCenterLocal = col.center;
     }
+
+    #region Scale Helpers
+    private float GetColliderScaleY()
+    {
+        if (colTr == null)
+            return 1f;
+
+        return Mathf.Max(0.0001f, Mathf.Abs(colTr.lossyScale.y));
+    }
+
+    private float GetColliderScaleXZ()
+    {
+        if (colTr == null)
+            return 1f;
+
+        Vector3 s = colTr.lossyScale;
+        float x = Mathf.Abs(s.x);
+        float z = Mathf.Abs(s.z);
+        return Mathf.Max(0.0001f, Mathf.Max(x, z));
+    }
+
+    private float GetWorldRadius()
+    {
+        return cachedColRadius * GetColliderScaleXZ();
+    }
+
+    private float GetWorldBottomOffset()
+    {
+        // cachedBottomOffset is in collider local space; scale it to world.
+        return cachedBottomOffset * GetColliderScaleY();
+    }
+    #endregion
+
     #endregion
 
     /// <summary>
@@ -935,11 +987,11 @@ public class Movement : MonoBehaviour
         if (col == null || tr == null)
             return true;
 
-        Vector3 up = cachedUp;
-        Vector3 worldCenter = tr.TransformPoint(originalCenter);
+        Vector3 up = Vector3.up;
+        Vector3 worldCenter = colTr != null ? colTr.TransformPoint(originalCenter) : transform.position;
 
-        float radius = cachedColRadius;
-        float halfHeight = Mathf.Max(originalHeight * 0.5f, radius);
+        float radius = cachedColRadius * GetColliderScaleXZ();
+        float halfHeight = Mathf.Max(originalHeight * 0.5f * GetColliderScaleY(), radius);
 
         Vector3 top = worldCenter + up * (halfHeight - radius);
         Vector3 bottom = worldCenter - up * (halfHeight - radius);
@@ -977,56 +1029,128 @@ public class Movement : MonoBehaviour
     #region Gizmos (Debug)
     private void OnDrawGizmos()
     {
-        CapsuleCollider c = GetComponent<CapsuleCollider>();
-        if (!c)
+        if (!enabled)
             return;
 
-        Transform t = transform;
-        Vector3 up = t.up;
+        if (gizmo_ShowCollider)
+            DrawColliderGizmo();
 
-        // ---------- Current collider (yellow) ----------
+        if (gizmo_ShowGroundCast)
+            DrawGroundCastGizmo();
+
+        if (gizmo_ShowOverlapCheck)
+            DrawOverlapGizmo();
+
+        if (gizmo_ShowStandingClearance)
+            DrawStandingClearanceGizmo();
+    }
+
+    private void DrawColliderGizmo()
+    {
+        CapsuleCollider c = GetComponentInChildren<CapsuleCollider>(true);
+        if (c == null)
+            return;
+
+        Transform t = c.transform;
+
+        float scaleY = Mathf.Abs(t.lossyScale.y);
+        float scaleXZ = Mathf.Max(Mathf.Abs(t.lossyScale.x), Mathf.Abs(t.lossyScale.z));
+
+        float radius = c.radius * scaleXZ;
+        float halfHeight = Mathf.Max(c.height * 0.5f * scaleY, radius);
+
+        Vector3 center = t.TransformPoint(c.center);
+        Vector3 up = Vector3.up;
+
+        Vector3 top = center + up * (halfHeight - radius);
+        Vector3 bottom = center - up * (halfHeight - radius);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(top, radius);
+        Gizmos.DrawWireSphere(bottom, radius);
+        Gizmos.DrawLine(top + Vector3.left * radius, bottom + Vector3.left * radius);
+        Gizmos.DrawLine(top + Vector3.right * radius, bottom + Vector3.right * radius);
+    }
+
+    private void DrawGroundCastGizmo()
+    {
+        if (col == null)
+            return;
+
+        Vector3 origin = GetGroundCheckPosition();
+
+        float scaleY = Mathf.Abs(col.transform.lossyScale.y);
+        float scaleXZ = Mathf.Max(
+            Mathf.Abs(col.transform.lossyScale.x),
+            Mathf.Abs(col.transform.lossyScale.z)
+        );
+
+        float radius = cachedColRadius * scaleXZ * groundSphereRadiusMultiplier;
+        float distance = groundCastDistance * scaleY;
+
         Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(origin, radius);
 
-        Vector3 currentCenter = t.TransformPoint(c.center);
-        float currentHalfHeight = Mathf.Max(c.height * 0.5f, c.radius);
-
-        Vector3 currentTop = currentCenter + up * (currentHalfHeight - c.radius);
-        Vector3 currentBottom = currentCenter - up * (currentHalfHeight - c.radius);
-
-        Gizmos.DrawWireSphere(currentTop, c.radius);
-        Gizmos.DrawWireSphere(currentBottom, c.radius);
-
-        // ---------- Standing clearance capsule (red) ----------
-        // This exactly matches HasStandingClearance()
         Gizmos.color = Color.red;
+        Gizmos.DrawLine(origin, origin + Vector3.down * distance);
 
-        Vector3 standCenter = t.TransformPoint(originalCenter);
-        float standHalfHeight = Mathf.Max(originalHeight * 0.5f, c.radius);
+        Gizmos.color = new Color(1f, 0f, 0f, 0.4f);
+        Gizmos.DrawWireSphere(origin + Vector3.down * distance, radius);
+    }
 
-        Vector3 standTop = standCenter + up * (standHalfHeight - c.radius);
-        Vector3 standBottom = standCenter - up * (standHalfHeight - c.radius);
+    private void DrawOverlapGizmo()
+    {
+        if (col == null)
+            return;
 
-        Gizmos.DrawWireSphere(standTop, c.radius);
-        Gizmos.DrawWireSphere(standBottom, c.radius);
+        Vector3 origin = GetGroundCheckPosition();
+        float scaleY = Mathf.Abs(col.transform.lossyScale.y);
+        float scaleXZ = Mathf.Max(
+            Mathf.Abs(col.transform.lossyScale.x),
+            Mathf.Abs(col.transform.lossyScale.z)
+        );
 
-        Gizmos.DrawLine(standTop + t.right * c.radius, standBottom + t.right * c.radius);
-        Gizmos.DrawLine(standTop - t.right * c.radius, standBottom - t.right * c.radius);
-        Gizmos.DrawLine(standTop + t.forward * c.radius, standBottom + t.forward * c.radius);
-        Gizmos.DrawLine(standTop - t.forward * c.radius, standBottom - t.forward * c.radius);
+        float radius = cachedColRadius * scaleXZ * groundSphereRadiusMultiplier * 0.98f;
+        float offset = groundBottomBias * scaleY + 0.01f * scaleY;
 
-        // ---------- Ground check (cyan) ----------
+        Vector3 overlapCenter = origin - Vector3.up * offset;
+
         Gizmos.color = Color.cyan;
-        float groundRadius = c.radius * groundSphereRadiusMultiplier;
-        float groundHalfHeight = Mathf.Max(c.height * 0.5f, c.radius);
-        float groundBottomOffset = groundHalfHeight - c.radius;
-        Vector3 groundCenter = t.TransformPoint(c.center);
-        Vector3 bottomSphereCenter = groundCenter - up * groundBottomOffset;
-        Vector3 groundOrigin = bottomSphereCenter + up * groundBottomBias;
-        Vector3 groundCastEnd = groundOrigin - up * groundCastDistance;
+        Gizmos.DrawWireSphere(overlapCenter, radius);
+    }
 
-        Gizmos.DrawWireSphere(groundOrigin, groundRadius);
-        Gizmos.DrawWireSphere(groundCastEnd, groundRadius);
-        Gizmos.DrawLine(groundOrigin, groundCastEnd);
+    private void DrawStandingClearanceGizmo()
+    {
+        CapsuleCollider c = GetComponentInChildren<CapsuleCollider>(true);
+        if (c == null)
+            return;
+
+        Transform t = c.transform;
+
+        float scaleY = Mathf.Max(0.0001f, Mathf.Abs(t.lossyScale.y));
+        float scaleXZ = Mathf.Max(0.0001f, Mathf.Max(Mathf.Abs(t.lossyScale.x), Mathf.Abs(t.lossyScale.z)));
+
+        // These are your "standing" capsule dimensions.
+        float radius = c.radius * scaleXZ;
+        float halfHeight = Mathf.Max(originalHeight * 0.5f * scaleY, radius);
+
+        Vector3 worldCenter = t.TransformPoint(originalCenter);
+        Vector3 up = Vector3.up;
+
+        Vector3 top = worldCenter + up * (halfHeight - radius);
+        Vector3 bottom = worldCenter - up * (halfHeight - radius);
+
+        // Color choice: red when blocked, green when clear (optional).
+        bool clear = true;
+        // If you have HasStandingClearance() available and it does not spam allocations,
+        // you can uncomment this to color based on real result:
+        // clear = HasStandingClearance();
+
+        Gizmos.color = clear ? Color.green : Color.red;
+
+        Gizmos.DrawWireSphere(top, radius);
+        Gizmos.DrawWireSphere(bottom, radius);
+        Gizmos.DrawLine(top, bottom);
     }
     #endregion
 }
