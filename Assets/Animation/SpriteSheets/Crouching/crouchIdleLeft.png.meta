@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: cb76b2164299ea34ba3ccb0cdf28986e
+guid: 23e897feb34183d4abec652ceb9d851d
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,12 +97,12 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: standRight-sheet_0
+      name: crouchLeft-sheet_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 200
+        width: 201
         height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -112,19 +112,19 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 20185a0e47cef964e80da402e3e22776
-      internalID: -130630394
+      spriteID: b297661e7df17ae429078ca57922b7ec
+      internalID: 454275733
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: standRight-sheet_1
+      name: crouchLeft-sheet_1
       rect:
         serializedVersion: 2
-        x: 200
+        x: 201
         y: 0
-        width: 200
+        width: 201
         height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -134,19 +134,19 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bfeba9bb57e93334698abcd20a89444e
-      internalID: 551389668
+      spriteID: 1eab8879d83645149a6ffb8665a55d60
+      internalID: -803177885
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: standRight-sheet_2
+      name: crouchLeft-sheet_2
       rect:
         serializedVersion: 2
-        x: 400
+        x: 402
         y: 0
-        width: 200
+        width: 201
         height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a0763283ac1edcf499fc16dc90bee607
-      internalID: -816479244
+      spriteID: bc98672c1be6417448a733fe8b6da5ac
+      internalID: -1923934526
       vertices: []
       indices: 
       edges: []
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 1eb34aed84fbfbc4e8c764e5a11f73b9
+    spriteID: dd44935baff46444d87b795cc5d1d202
     internalID: 0
     vertices: []
     indices: 
@@ -176,11 +176,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":200.0,"y":700.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":201.0,"y":700.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      standRight-sheet_0: -130630394
-      standRight-sheet_1: 551389668
-      standRight-sheet_2: -816479244
+      crouchLeft-sheet_0: 454275733
+      crouchLeft-sheet_1: -803177885
+      crouchLeft-sheet_2: -1923934526
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

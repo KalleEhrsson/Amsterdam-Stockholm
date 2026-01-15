@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: bff34cd8e8ab8bb4b9bddada894e6671
+guid: bc79991f5ede25648be3548245e940c7
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: WalkCrR-Sheet-sheet_0
+      name: crouchRight-sheet_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 1
-        width: 200
-        height: 669
+        y: 0
+        width: 201
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,20 +112,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: eff289cb94d99094c829a56e5de032b6
-      internalID: -1002097034
+      spriteID: 1b7caab35a874b549b1bce8239fc918d
+      internalID: -730565282
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: WalkCrR-Sheet-sheet_1
+      name: crouchRight-sheet_1
       rect:
         serializedVersion: 2
-        x: 200
-        y: 1
-        width: 200
-        height: 669
+        x: 201
+        y: 0
+        width: 201
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -134,20 +134,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f91c873844e24f14780fe5e06cc84139
-      internalID: -1646110918
+      spriteID: b6a720cabeb6a4041b4afb56fd488841
+      internalID: 1142098078
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: WalkCrR-Sheet-sheet_2
+      name: crouchRight-sheet_2
       rect:
         serializedVersion: 2
-        x: 400
-        y: 1
-        width: 200
-        height: 669
+        x: 402
+        y: 0
+        width: 201
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -156,30 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: aac0a98a337b6484398f2615c931c2ed
-      internalID: -34343062
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: WalkCrR-Sheet-sheet_3
-      rect:
-        serializedVersion: 2
-        x: 600
-        y: 1
-        width: 200
-        height: 669
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 04caea8bee93a6e468a8ba6ef4d7e494
-      internalID: -1252866977
+      spriteID: 7574c400d5da63740a4d36d5923fb3e2
+      internalID: -1818289105
       vertices: []
       indices: 
       edges: []
@@ -188,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 30ef88b4ebafc5d4788ce8a580d13d81
+    spriteID: 81b64a91f0ac93642a2c751a5d0fe600
     internalID: 0
     vertices: []
     indices: 
@@ -198,12 +176,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":201.0,"y":700.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      WalkCrR-Sheet-sheet_0: -1002097034
-      WalkCrR-Sheet-sheet_1: -1646110918
-      WalkCrR-Sheet-sheet_2: -34343062
-      WalkCrR-Sheet-sheet_3: -1252866977
+      crouchRight-sheet_0: -730565282
+      crouchRight-sheet_1: 1142098078
+      crouchRight-sheet_2: -1818289105
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ef76a4ab37c0ad44c883d9595559cd4b
+guid: 9fb8973273e60af42a070cb7075be2f3
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: walkCrouchRight_0
+      name: walkCrouchRigh2t-sheet_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 199
-        height: 304
+        width: 200
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,20 +112,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0070352389d61754195ebec70624f69a
-      internalID: 418634229
+      spriteID: 8573b4f4696bf494f8910156191b081d
+      internalID: -91599404
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkCrouchRight_1
+      name: walkCrouchRigh2t-sheet_1
       rect:
         serializedVersion: 2
         x: 200
         y: 0
-        width: 199
-        height: 302
+        width: 200
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -134,20 +134,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 464a93800c0c98f478d5b2679a311645
-      internalID: 586380878
+      spriteID: f8c75f5e435e3c547a8740f14143d6ff
+      internalID: 1880024488
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkCrouchRight_2
+      name: walkCrouchRigh2t-sheet_2
       rect:
         serializedVersion: 2
         x: 400
         y: 0
-        width: 199
-        height: 304
+        width: 200
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -156,20 +156,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d01378f42ad0f924a986cad57f10c0a5
-      internalID: 1455869542
+      spriteID: a56afbb9dc4d93f42a0c992997c77e24
+      internalID: 1435901380
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: walkCrouchRight_3
+      name: walkCrouchRigh2t-sheet_3
       rect:
         serializedVersion: 2
         x: 600
         y: 0
-        width: 199
-        height: 302
+        width: 200
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -178,8 +178,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 965708fd3774d6d4f9a9ed6e1c9a1a25
-      internalID: 352772476
+      spriteID: 4707e5a0a2f7f18449e1c92e8a21fe92
+      internalID: -342221358
       vertices: []
       indices: 
       edges: []
@@ -188,7 +188,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: ba4123a59ba63e943a93366058afa4fd
+    spriteID: 2f83ba77e4531df439e050074a5dcda9
     internalID: 0
     vertices: []
     indices: 
@@ -198,12 +198,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":4.0,"y":1.0},"gridSpriteSize":{"x":200.0,"y":700.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      walkCrouchRight_0: 418634229
-      walkCrouchRight_1: 586380878
-      walkCrouchRight_2: 1455869542
-      walkCrouchRight_3: 352772476
+      walkCrouchRigh2t-sheet_0: -91599404
+      walkCrouchRigh2t-sheet_1: 1880024488
+      walkCrouchRigh2t-sheet_2: 1435901380
+      walkCrouchRigh2t-sheet_3: -342221358
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ea9b2725bd43ca24a9534ab5760ace72
+guid: e9104e674251c964aa2e8eea7ef6089a
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: crouchLeft_0
+      name: crouchLeft-sheet_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 201
-        height: 303
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,20 +112,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d1e68937770a80942b910c4b6ab4a84d
-      internalID: 297370642
+      spriteID: b297661e7df17ae429078ca57922b7ec
+      internalID: 454275733
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: crouchLeft_1
+      name: crouchLeft-sheet_1
       rect:
         serializedVersion: 2
-        x: 216
-        y: 1
-        width: 175
-        height: 315
+        x: 201
+        y: 0
+        width: 201
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -134,20 +134,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0f54a10e43dd72241a17ca48acbd90fa
-      internalID: 665092571
+      spriteID: 1eab8879d83645149a6ffb8665a55d60
+      internalID: -803177885
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: crouchLeft_2
+      name: crouchLeft-sheet_2
       rect:
         serializedVersion: 2
-        x: 452
-        y: 1
-        width: 143
-        height: 335
+        x: 402
+        y: 0
+        width: 201
+        height: 700
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 681efac41dd796742bcbe29f54337dc2
-      internalID: -2112522776
+      spriteID: bc98672c1be6417448a733fe8b6da5ac
+      internalID: -1923934526
       vertices: []
       indices: 
       edges: []
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 37445d3c42d3c5c4db869952fc192481
+    spriteID: dd44935baff46444d87b795cc5d1d202
     internalID: 0
     vertices: []
     indices: 
@@ -176,11 +176,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":201.0,"y":700.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      crouchLeft_0: 297370642
-      crouchLeft_1: 665092571
-      crouchLeft_2: -2112522776
+      crouchLeft-sheet_0: 454275733
+      crouchLeft-sheet_1: -803177885
+      crouchLeft-sheet_2: -1923934526
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
