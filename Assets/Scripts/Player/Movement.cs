@@ -183,10 +183,13 @@ public class Movement : MonoBehaviour
     #endregion
 
     #region Debug Gizmos
-    [SerializeField] private bool gizmo_ShowCollider = true;
-    [SerializeField] private bool gizmo_ShowGroundCast = true;
-    [SerializeField] private bool gizmo_ShowOverlapCheck = false;
-    [SerializeField] private bool gizmo_ShowStandingClearance = true;
+    [Header("Gizmos · Collision")]
+    [SerializeField] private bool PlayerCollider = true;
+    [SerializeField] private bool StandingClearance = true;
+
+    [Header("Gizmos · Ground Detection")]
+    [SerializeField] private bool GroundSphereCast = false;
+    [SerializeField] private bool GroundOverlapFallback = false;
     #endregion
 
     /// <summary>
@@ -1032,16 +1035,16 @@ public class Movement : MonoBehaviour
         if (!enabled)
             return;
 
-        if (gizmo_ShowCollider)
+        if (PlayerCollider)
             DrawColliderGizmo();
 
-        if (gizmo_ShowGroundCast)
+        if (GroundSphereCast)
             DrawGroundCastGizmo();
 
-        if (gizmo_ShowOverlapCheck)
+        if (GroundOverlapFallback)
             DrawOverlapGizmo();
 
-        if (gizmo_ShowStandingClearance)
+        if (StandingClearance)
             DrawStandingClearanceGizmo();
     }
 
@@ -1088,13 +1091,16 @@ public class Movement : MonoBehaviour
         float radius = cachedColRadius * scaleXZ * groundSphereRadiusMultiplier;
         float distance = groundCastDistance * scaleY;
 
-        Gizmos.color = Color.yellow;
+        // Cast origin
+        Gizmos.color = Color.white;
         Gizmos.DrawWireSphere(origin, radius);
 
+        // Cast direction
         Gizmos.color = Color.red;
         Gizmos.DrawLine(origin, origin + Vector3.down * distance);
 
-        Gizmos.color = new Color(1f, 0f, 0f, 0.4f);
+        // Cast end
+        Gizmos.color = new Color(1f, 1f, 1f, 0.35f);
         Gizmos.DrawWireSphere(origin + Vector3.down * distance, radius);
     }
 
@@ -1115,7 +1121,7 @@ public class Movement : MonoBehaviour
 
         Vector3 overlapCenter = origin - Vector3.up * offset;
 
-        Gizmos.color = Color.cyan;
+        Gizmos.color = new Color(1f, 0f, 1f); // magenta
         Gizmos.DrawWireSphere(overlapCenter, radius);
     }
 
@@ -1146,7 +1152,9 @@ public class Movement : MonoBehaviour
         // you can uncomment this to color based on real result:
         // clear = HasStandingClearance();
 
-        Gizmos.color = clear ? Color.green : Color.red;
+        Gizmos.color = clear
+            ? new Color(0.2f, 0.6f, 1f)   // blue = clear
+            : Color.red;                 // red = blocked
 
         Gizmos.DrawWireSphere(top, radius);
         Gizmos.DrawWireSphere(bottom, radius);
