@@ -23,6 +23,14 @@ public class Ladder : MonoBehaviour
     [Header("Snap")]
     [Tooltip("Optional snap position for the player while on the ladder.\nIf not set, the player snaps to the center of the ladder collider bounds.")]
     [SerializeField] private Transform snapPoint;
+
+    [Header("Front-Only Attach")]
+    [Tooltip("Minimum dot product required to attach from the ladder front. Higher = narrower cone.")]
+    [SerializeField, Range(-1f, 1f)] private float frontAttachDotThreshold = 0.2f;
+
+    [Header("Debug")]
+    [SerializeField] private bool ladderDebugGizmos;
+    [SerializeField] private float ladderDebugGizmoSurfaceOffset = 0.1f;
     #endregion
 
     #region Runtime
@@ -41,6 +49,15 @@ public class Ladder : MonoBehaviour
             return;
 
         TryAutoAttach(other);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        Movement m = other.GetComponentInParent<Movement>();
+        if (m == null)
+            return;
+
+        m.NotifyLadderExit(this);
     }
 
     private void OnTriggerStay(Collider other)
@@ -72,6 +89,15 @@ public class Ladder : MonoBehaviour
         // If it's a trigger collider, collision callbacks won't be relevant anyway.
         TryAutoAttach(collision.collider);
     }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        Movement m = collision.collider.GetComponentInParent<Movement>();
+        if (m == null)
+            return;
+
+        m.NotifyLadderExit(this);
+    }
     #endregion
 
     #region Attach Helpers
@@ -89,15 +115,52 @@ public class Ladder : MonoBehaviour
     #endregion
 
     #region Public
-    public Vector3 GetSnapWorldPosition()
+    public bool CanAttachFrom(Vector3 playerWorldPos)
     {
-        if (snapPoint != null)
-            return snapPoint.position;
+        Vector3 axis = GetLadderUp();
+
+        Vector3 basePoint = snapPoint != null
+            ? snapPoint.position
+            : ladderCollider != null
+                ? ladderCollider.bounds.center
+                : transform.position;
+
+        Vector3 toPlayer = playerWorldPos - basePoint;
+        Vector3 planar = Vector3.ProjectOnPlane(toPlayer, axis);
+
+        if (planar.sqrMagnitude < 0.0001f)
+            return true;
+
+        planar.Normalize();
+        float dot = Vector3.Dot(GetLadderForward(), planar);
+        return dot >= frontAttachDotThreshold;
+    }
+
+
+    public Vector3 GetSnapWorldPosition(Vector3 playerWorldPos, float surfaceOffset)
+    {
+        Vector3 axis = GetLadderUp();
+        Vector3 forward = GetLadderForward();
+        Vector3 basePoint = snapPoint != null
+            ? snapPoint.position
+            : ladderCollider != null
+                ? ladderCollider.bounds.center
+                : transform.position;
+
+        Vector3 toPlayer = playerWorldPos - basePoint;
+        float along = Vector3.Dot(toPlayer, axis);
+        Vector3 spinePoint = basePoint + axis * along;
+
+        float halfDepth = 0f;
 
         if (ladderCollider != null)
-            return ladderCollider.bounds.center;
+        {
+            Bounds b = ladderCollider.bounds;
+            Vector3 absForward = new Vector3(Mathf.Abs(forward.x), Mathf.Abs(forward.y), Mathf.Abs(forward.z));
+            halfDepth = Vector3.Dot(b.extents, absForward);
+        }
 
-        return transform.position;
+        return spinePoint + forward * (halfDepth + surfaceOffset);
     }
     
     public Bounds GetWorldBounds()
@@ -115,8 +178,78 @@ public class Ladder : MonoBehaviour
 
     public Vector3 GetClimbAxis()
     {
-        return transform.up.normalized;
+        return GetLadderUp();
     }
+
+    #region Orientation
+
+    public Vector3 GetLadderUp()
+    {
+        // Pick the local axis that points most upward in world space
+        Vector3[] axes =
+        {
+            transform.up,
+            transform.right,
+            transform.forward
+        };
+
+        Vector3 best = axes[0];
+        float bestDot = Vector3.Dot(best.normalized, Vector3.up);
+
+        for (int i = 1; i < axes.Length; i++)
+        {
+            float d = Vector3.Dot(axes[i].normalized, Vector3.up);
+            if (d > bestDot)
+            {
+                bestDot = d;
+                best = axes[i];
+            }
+        }
+
+        return best.normalized;
+    }
+
+    public Vector3 GetLadderForward()
+    {
+        Vector3 axis = GetLadderUp();
+
+        // 2.5D: ladder front must be on ±X, not ±Z.
+        Vector3 forward = Vector3.ProjectOnPlane(Vector3.right, axis);
+
+        // Fallback if axis is almost parallel to X
+        if (forward.sqrMagnitude < 0.0001f)
+            forward = Vector3.ProjectOnPlane(Vector3.forward, axis);
+
+        forward.Normalize();
+
+        // Pick the side that "faces upward" on inclined ladders
+        if (Vector3.Dot(-forward, Vector3.up) > Vector3.Dot(forward, Vector3.up))
+            forward = -forward;
+
+        return forward;
+    }
+
+    /// <summary>
+    /// Rough hint for which way is "out" from the ladder,
+    /// based on collider bounds.
+    /// </summary>
+    private Vector3 GetOutwardHint()
+    {
+        if (ladderCollider == null)
+            return transform.forward;
+
+        Bounds b = ladderCollider.bounds;
+        Vector3 centerToSurface = (b.center - transform.position);
+        centerToSurface -= GetLadderUp() * Vector3.Dot(centerToSurface, GetLadderUp());
+
+        if (centerToSurface.sqrMagnitude < 0.0001f)
+            return transform.forward;
+
+        return centerToSurface.normalized;
+    }
+
+    #endregion
+
     
     public Vector3 GetTopPoint()
     {
@@ -124,7 +257,7 @@ public class Ladder : MonoBehaviour
             return transform.position;
 
         Bounds b = ladderCollider.bounds;
-        Vector3 axis = GetClimbAxis();
+        Vector3 axis = GetLadderUp();
 
         Vector3 c = b.center;
         Vector3 e = b.extents;
@@ -146,6 +279,32 @@ public class Ladder : MonoBehaviour
         }
 
         return best;
+    }
+    #endregion
+
+    #region Gizmos
+    private void OnDrawGizmosSelected()
+    {
+        if (!ladderDebugGizmos)
+            return;
+
+        if (ladderCollider == null)
+            ladderCollider = GetComponent<Collider>();
+
+        Vector3 forward = GetLadderForward();
+        Vector3 basePoint = snapPoint != null
+            ? snapPoint.position
+            : ladderCollider != null
+                ? ladderCollider.bounds.center
+                : transform.position;
+
+        Vector3 snap = GetSnapWorldPosition(basePoint, ladderDebugGizmoSurfaceOffset);
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawSphere(snap, 0.05f);
+
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawLine(snap, snap + forward * 0.35f);
     }
     #endregion
 

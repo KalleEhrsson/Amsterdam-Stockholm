@@ -137,6 +137,9 @@ public class Movement : MonoBehaviour
     [SerializeField] private float ladderRotateSpeed = 18f;
     [SerializeField] private float uprightRotateSpeed = 22f;
 
+    [Tooltip("How far to offset the player from the ladder surface when snapping.")]
+    [SerializeField] private float ladderSurfaceOffset = 0.1f;
+
     [Tooltip("Detach if player pushes sideways while on ladder.")]
     [SerializeField] private bool detachOnHorizontalInput = true;
 
@@ -177,6 +180,10 @@ public class Movement : MonoBehaviour
     
     [SerializeField] private float ladderAttachGraceTime = 0.12f;
     private float ladderAttachGraceTimer;
+
+    private bool ladderSawExit;
+    [SerializeField] private float ladderExitGraceTime = 0.15f;
+    private float ladderExitGraceTimer;
     
     [SerializeField] private float ladderSurfacePadding = 0.02f;
     private readonly List<Collider> ignoredLadderColliders = new();
@@ -1042,8 +1049,18 @@ public class Movement : MonoBehaviour
         if (isCrouching)
             return;
 
+        if (!ladder.CanAttachFrom(tr.position))
+        {
+            if (ladderDebugLogs)
+                Debug.Log($"[Ladder] ATTACH denied (back side) -> {ladder.name}", this);
+            return;
+        }
+
         isOnLadder = true;
         currentLadder = ladder;
+
+        ladderSawExit = false;
+        ladderExitGraceTimer = 0f;
         
         ladderAttachGraceTimer = ladderAttachGraceTime;
         SetLadderCollisionIgnored(ladder, true);
@@ -1071,11 +1088,29 @@ public class Movement : MonoBehaviour
             Debug.Log($"[Ladder] ATTACH -> {ladder.name}", this);
     }
 
-    public void DetachFromLadder(bool jumpOff)
+    public void NotifyLadderExit(Ladder ladder)
     {
         if (!isOnLadder)
             return;
              
+       if (ladder == null)
+            return;
+
+        if (currentLadder != ladder)
+            return;
+
+        if (ladderDebugLogs)
+            Debug.Log($"[Ladder] EXIT <- {ladder.name}", this);
+
+        // Don't detach immediately.
+        // The trigger can be exited due to snapping/offset even while we're still valid.
+        // Mark it and let HandleLadderMovement decide using distance checks.
+        ladderSawExit = true;
+        ladderExitGraceTimer = ladderExitGraceTime;
+    }
+
+    public void DetachFromLadder(bool jumpOff)
+    {
         if (!isOnLadder)
             return;
         
@@ -1132,8 +1167,11 @@ public class Movement : MonoBehaviour
         if (rb == null)
             return;
 
-        if (currentLadder == null)
+        if (currentLadder == null|| !currentLadder.isActiveAndEnabled)
         {
+            if (ladderDebugLogs && currentLadder == null)
+                Debug.Log("[Ladder] DETACH <- null ladder reference", this);
+
             DetachFromLadder(false);
             return;
         }
@@ -1141,46 +1179,46 @@ public class Movement : MonoBehaviour
         if (ladderAttachGraceTimer > 0f)
             ladderAttachGraceTimer -= Time.fixedDeltaTime;
 
-        Vector3 axis = currentLadder.GetClimbAxis();
-        Vector3 basePoint = currentLadder.GetSnapWorldPosition();
+        if (!currentLadder.CanAttachFrom(tr.position))
+        {
+            if (ladderDebugLogs)
+                Debug.Log($"[Ladder] DETACH <- {currentLadder.name} reason=backside", this);
 
-        // Spine point = projection onto ladder axis line (stable for angled ladders)
-        Vector3 toPlayer = tr.position - basePoint;
-        float along = Vector3.Dot(toPlayer, axis);
-        Vector3 spinePoint = basePoint + axis * along;
+            DetachFromLadder(false);
+                return;
+        }
 
-        // Compute an outward direction so we stay in front of the ladder surface (never inside it)
-        Vector3 surfacePoint = currentLadder.GetClosestPoint(tr.position);
-        Vector3 outward = tr.position - surfacePoint;
-
-        // Remove any component along the ladder axis (we want sideways/outward only)
-        outward -= axis * Vector3.Dot(outward, axis);
-
-        if (outward.sqrMagnitude < 0.0001f)
-            outward = Vector3.ProjectOnPlane(cachedRight, axis);
-
-        if (outward.sqrMagnitude < 0.0001f)
-            outward = Vector3.right;
-
-        outward = outward.normalized;
+        Vector3 axis = currentLadder.GetLadderUp();
 
         float playerRadius = col != null ? col.radius : 0.25f;
+        float snapOffset = playerRadius + ladderSurfaceOffset;
 
-        // Target position is spine + outward offset so capsule and ladder do not touch
-        Vector3 targetPos = spinePoint + outward * (playerRadius + ladderSurfacePadding);
+        // Target position is projected onto ladder axis and offset in front of ladder surface.
+        Vector3 targetPos = currentLadder.GetSnapWorldPosition(tr.position, snapOffset);
 
         // Detach distance should match the “no touch” rule:
         // stay attached if we're within ladder lateral radius + playerRadius + padding.
         float ladderRadius = GetLadderLateralRadius(currentLadder, axis);
         float detachDistance = ladderRadius + playerRadius + ladderSurfacePadding + 0.02f;
 
-        float lateralDist = Vector3.Distance(tr.position, targetPos);
+        // Sideways-only distance (ignore climb axis and surface offset)
+        Vector3 toPlayer = tr.position - targetPos;
+        toPlayer -= axis * Vector3.Dot(toPlayer, axis);
+        float lateralDist = toPlayer.magnitude;
 
-        if (ladderAttachGraceTimer <= 0f && lateralDist > detachDistance)
+        if (ladderSawExit)
         {
-            DetachFromLadder(false);
-            return;
+            ladderExitGraceTimer -= Time.fixedDeltaTime;
+
+            if (ladderExitGraceTimer <= 0f && lateralDist > detachDistance)
+            {
+                DetachFromLadder(false);
+                return;
+            }
         }
+
+        if (lateralDist <= detachDistance)
+            ladderSawExit = false;
 
         currentState = MovementState.Ladder;
 
@@ -1306,8 +1344,9 @@ public class Movement : MonoBehaviour
         if (rb == null || currentLadder == null)
             return;
 
-        Vector3 axis = currentLadder.GetClimbAxis();
-        Vector3 top = currentLadder.GetTopPoint();
+        Ladder ladder = currentLadder;
+        Vector3 axis = ladder.GetLadderUp();
+        Vector3 top = ladder.GetTopPoint();
 
         Vector3 sideways = Vector3.ProjectOnPlane(cachedRight, axis).normalized;
         if (sideways.sqrMagnitude < 0.0001f)
@@ -1322,28 +1361,24 @@ public class Movement : MonoBehaviour
         v -= axis * Vector3.Dot(v, axis);
         rb.linearVelocity = v;
 
-        // Detach first so no ladder logic runs after reposition
-        rb.useGravity = ladderPrevUseGravity;
-        rb.constraints = ladderPrevConstraints;
-
-        isOnLadder = false;
-        currentLadder = null;
+        DetachFromLadder(false);
 
         // Place on top and slightly away from ladder
         tr.position = top
                       + axis * ladderStepOffUpOffset
                       + sideways * (sideSign * ladderStepOffSideOffset);
-
-        currentState = Mathf.Abs(HorizontalInput) > 0.1f ? MovementState.Walking : MovementState.Idle;
     }
     
     private void SetLadderCollisionIgnored(Ladder ladder, bool ignored)
     {
-        if (col == null || ladder == null)
+        if (col == null)
             return;
 
         if (ignored)
         {
+            if (ladder == null)
+                return;
+                
             ignoredLadderColliders.Clear();
 
             // Grab ladder colliders (root + children). This covers “ladder volume + any extra pieces”.
@@ -1351,6 +1386,10 @@ public class Movement : MonoBehaviour
             foreach (Collider lc in ladderCols)
             {
                 if (lc == null)
+                    continue;
+
+                // Never ignore trigger colliders, or we'll instantly "exit" the ladder trigger and detach.
+                if (lc.isTrigger)
                     continue;
 
                 Physics.IgnoreCollision(col, lc, true);
