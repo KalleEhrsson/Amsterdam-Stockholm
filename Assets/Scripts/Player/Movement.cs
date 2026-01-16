@@ -48,11 +48,18 @@ public class Movement : MonoBehaviour
     /// </summary>
     #region Animation (Exposed)
     public bool FacingRight { get; private set; } = true;
+    public bool IsPushing { get; private set; }
     public float HorizontalInput { get; private set; }
     public float HorizontalSpeedNormalized { get; private set; }
     public float VerticalVelocity { get; private set; }
     public float MoveX => HorizontalInput;
     public float IdleX => FacingRight ? 1f : -1f;
+    #endregion
+
+    #region Inspector: Pushing
+    [Header("Pushing")]
+    [SerializeField] private LayerMask pushableLayers;
+    [SerializeField] private float pushingDotThreshold = 0.35f; // higher = must push more straight into it
     #endregion
 
     /// <summary>
@@ -607,22 +614,48 @@ public class Movement : MonoBehaviour
     {
         hasWallNormal = false;
 
+        bool foundPush = false;
+
         for (int i = 0; i < collision.contactCount; i++)
         {
-            Vector3 n = collision.GetContact(i).normal;
+            ContactPoint cp = collision.GetContact(i);
+            Vector3 n = cp.normal;
+
             // Ignore ground-ish normals, we only care about walls.
             if (Vector3.Dot(n, cachedUp) > 0.6f)
                 continue;
 
             lastWallNormal = n;
             hasWallNormal = true;
+
+            // Pushing detection
+            if (!foundPush && isGrounded && Mathf.Abs(HorizontalInput) > 0.01f)
+            {
+                int otherLayerMask = 1 << collision.gameObject.layer;
+                bool isPushableLayer = (pushableLayers.value & otherLayerMask) != 0;
+
+                Rigidbody otherRb = collision.rigidbody; // may be null if static collider
+                bool hasPushableRb = otherRb != null && !otherRb.isKinematic;
+
+                if (isPushableLayer && hasPushableRb)
+                {
+                    Vector3 pushDir = cachedRight * Mathf.Sign(HorizontalInput);
+                    float into = Vector3.Dot(pushDir, -n); // >0 means pushing into the surface
+                    if (into >= pushingDotThreshold)
+                        foundPush = true;
+                }
+            }
+
             break;
         }
+
+        IsPushing = foundPush;
     }
 
     private void OnCollisionExit(Collision _)
     {
         hasWallNormal = false;
+        IsPushing = false;
     }
     #endregion
 

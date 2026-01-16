@@ -17,6 +17,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     [SerializeField] private string landTrigger = "Land";
     [SerializeField] private string moveXParam = "MoveX";
     [SerializeField] private string idleXParam = "IdleX";
+    [SerializeField] private string pushingParam = "IsPushing";
     #endregion
 
     #region Cached
@@ -69,6 +70,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
 
         animator.SetBool(groundedParam, movement.IsGrounded);
         animator.SetBool(facingRightParam, movement.FacingRight);
+        animator.SetBool(pushingParam, movement.IsPushing);
 
         animator.SetFloat(moveXParam, movement.MoveX);
         animator.SetFloat(idleXParam, movement.IdleX);
