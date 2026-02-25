@@ -133,67 +133,22 @@ public class Movement : MonoBehaviour
     #endregion
 
     #region Inspector: Ladder
+    [SerializeField] private float ladderClimbSpeed = 4.5f;
+    [SerializeField] private float ladderEnterDeadzone = 0.1f;
+    [SerializeField] private float ladderExitDeadzone = 0.05f;
+    [SerializeField] private float ladderJumpOffHorizontalSpeed = 2.0f;
 
-    [Header("Ladder Settings")] [SerializeField]
-    private float ladderClimbSpeed = 3.5f;
-
-    [Tooltip("How quickly the player snaps to the ladder center (higher = snappier.")] [SerializeField]
-    private float ladderSnapSpeed = 25f;
-    
-    [Tooltip("How quickly the player rotates to match the ladder axis (higher = snappier).")]
-    [SerializeField] private float ladderRotateSpeed = 18f;
-    [SerializeField] private float uprightRotateSpeed = 22f;
-
-    [Tooltip("How far to offset the player from the ladder surface when snapping.")]
-    [SerializeField] private float ladderSurfaceOffset = 0.1f;
-
-    [Tooltip("Detach if player pushes sideways while on ladder.")]
-    [SerializeField] private bool detachOnHorizontalInput = true;
-
-    [SerializeField] private float detachHorizontalThreshold = 0.6f;
-
-    [Tooltip("Small push when jumping off ladder.")] 
-    [SerializeField] private float ladderJumpOffHorizontalSpeed = 2.5f;
-    
-    [Header("Ladder Step-Off")]
-    [SerializeField] private bool ladderStepOffAtTop = true;
-
-    [Tooltip("How close to the ladder top (along ladder axis) before stepping off.")]
-    [SerializeField] private float ladderTopStepOffDistance = 0.12f;
-
-    [Tooltip("Offset along ladder axis when stepping off (prevents clipping).")]
-    [SerializeField] private float ladderStepOffUpOffset = 0.08f;
-
-    [Tooltip("Offset away from ladder when stepping off.")]
-    [SerializeField] private float ladderStepOffSideOffset = 0.35f;
-    #endregion
-    
-    #region Ladder State
-    public bool IsOnLadder => isOnLadder;
-    public Ladder CurrentLadder => currentLadder;
-
+    // Ladder state
+    private bool canClimbLadder;
     private bool isOnLadder;
+    private float ladderCenterX;
+    private float ladderSnapSpeed;
     private Ladder currentLadder;
-    private bool ladderPrevUseGravity;
-    
-    [SerializeField] private bool ladderDebugLogs = true;
-    [SerializeField] private float ladderDebugInterval = 0.25f;
-    private float ladderDebugTimer;
-    private RigidbodyConstraints ladderPrevConstraints;
 
-    private float VerticalInput { get; set; }
-
-    private float prevZRotationBeforeLadder;
-    
-    [SerializeField] private float ladderAttachGraceTime = 0.12f;
-    private float ladderAttachGraceTimer;
-
-    private bool ladderSawExit;
-    [SerializeField] private float ladderExitGraceTime = 0.15f;
-    private float ladderExitGraceTimer;
-    
-    [SerializeField] private float ladderSurfacePadding = 0.02f;
-    private readonly List<Collider> ignoredLadderColliders = new();
+    // Cached RB settings while climbing
+    private bool ladderCachedUseGravity;
+    private float ladderCachedDrag;
+    private RigidbodyConstraints ladderCachedConstraints;
     #endregion
 
     /// <summary>
@@ -311,27 +266,37 @@ public class Movement : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         HorizontalInput = h;
         
-        float v = Input.GetAxisRaw("Vertical");
-        VerticalInput = v;
-        
         if (Mathf.Abs(h) > 0.01f)
             FacingRight = h > 0f;
     }
 
     private void FixedUpdate()
     {
-        // Keep cached transform axes fresh for physics-step methods.
-        UpdateCachedTransform();
-        
-        if (isOnLadder)
+        float v = Input.GetAxisRaw("Vertical");
+        bool jumpPressed = Input.GetButtonDown("Jump");
+
+        if (canClimbLadder)
         {
-            HandleLadderMovement();
+            if (!isOnLadder)
+            {
+                if (Mathf.Abs(v) >= ladderEnterDeadzone)
+                    BeginLadder();
+            }
+
+            if (isOnLadder)
+            {
+                TickLadder(v, jumpPressed, facingRight: /* your facing bool */ true);
+                return;
+            }
         }
         else
         {
-            UpdateUprightRotation();
+            if (isOnLadder)
+                EndLadder();
         }
-
+        // Keep cached transform axes fresh for physics-step methods.
+        UpdateCachedTransform();
+        
         // Cache ground check once per physics step to avoid duplicate Physics queries.
         bool prevGrounded = isGrounded;
 
@@ -384,6 +349,8 @@ public class Movement : MonoBehaviour
         // Update exposed physics info for animations.
         if (rb != null)
             VerticalVelocity = rb.linearVelocity.y;
+        
+        
     }
     #endregion
 
@@ -412,9 +379,6 @@ public class Movement : MonoBehaviour
 
     private void HandleCrouchInput()
     {
-        if (isOnLadder)
-            return;
-        
         bool crouchHeld = Input.GetKey(KeyCode.LeftControl);
         if (crouchHeld)
             StartCrouch();
@@ -886,6 +850,101 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
+    #region Ladder
+    public void SetLadder(Ladder ladder, float centerX, float snapSpeed)
+    {
+        currentLadder = ladder;
+        ladderCenterX = centerX;
+        ladderSnapSpeed = Mathf.Max(0f, snapSpeed);
+        canClimbLadder = true;
+    }
+
+    public void ClearLadder(Ladder ladder)
+    {
+        if (currentLadder != ladder)
+            return;
+
+        currentLadder = null;
+        canClimbLadder = false;
+
+        if (isOnLadder)
+            EndLadder();
+    }
+
+    private void BeginLadder()
+    {
+        if (isOnLadder)
+            return;
+
+        isOnLadder = true;
+
+        ladderCachedUseGravity = rb.useGravity;
+        ladderCachedDrag = rb.linearDamping;
+        ladderCachedConstraints = rb.constraints;
+
+        rb.useGravity = false;
+        rb.linearDamping = 0f;
+
+        // Optional: lock rotation while on ladder if your game expects it
+        // rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        var v = rb.linearVelocity;
+        v.y = 0f;
+        rb.linearVelocity = v;
+    }
+
+    private void TickLadder(float verticalInput, bool jumpPressed, bool facingRight)
+    {
+        if (!isOnLadder)
+            return;
+
+        if (currentLadder == null)
+        {
+            EndLadder();
+            return;
+        }
+
+        if (jumpPressed)
+        {
+            EndLadder();
+
+            var v = rb.linearVelocity;
+            v.y = jumpForce;
+            v.x = (facingRight ? 1f : -1f) * ladderJumpOffHorizontalSpeed;
+            v.z = 0f;
+            rb.linearVelocity = v;
+            return;
+        }
+
+        var pos = rb.position;
+        pos.x = Mathf.MoveTowards(pos.x, ladderCenterX, ladderSnapSpeed * Time.fixedDeltaTime);
+
+        float yVel = 0f;
+        if (Mathf.Abs(verticalInput) > ladderExitDeadzone)
+            yVel = verticalInput * ladderClimbSpeed;
+
+        var vel = rb.linearVelocity;
+        vel.x = 0f;
+        vel.z = 0f;
+        vel.y = yVel;
+
+        rb.MovePosition(pos);
+        rb.linearVelocity = vel;
+    }
+
+    private void EndLadder()
+    {
+        if (!isOnLadder)
+            return;
+
+        isOnLadder = false;
+
+        rb.useGravity = ladderCachedUseGravity;
+        rb.linearDamping = ladderCachedDrag;
+        rb.constraints = ladderCachedConstraints;
+    }
+    #endregion
+    
     /// <summary>
     /// Public API for temporary slows
     /// </summary>
@@ -1067,381 +1126,7 @@ public class Movement : MonoBehaviour
         groundLayer = 1 << layerIndex;
     }
     
-    #region Ladder
-    public void TryAttachToLadder(Ladder ladder)
-    {
-        if (ladder == null)
-            return;
-
-        if (isOnLadder)
-            return;
-
-        if (rb == null)
-            return;
-
-        if (isCrouching)
-            return;
-
-        if (!ladder.CanAttachFrom(tr.position))
-        {
-            if (ladderDebugLogs)
-                Debug.Log($"[Ladder] ATTACH denied (back side) -> {ladder.name}", this);
-            return;
-        }
-
-        isOnLadder = true;
-        currentLadder = ladder;
-
-        ladderSawExit = false;
-        ladderExitGraceTimer = 0f;
-        
-        ladderAttachGraceTimer = ladderAttachGraceTime;
-        SetLadderCollisionIgnored(ladder, true);
-
-        ladderPrevUseGravity = rb.useGravity;
-        rb.useGravity = false;
-        
-        prevZRotationBeforeLadder = tr.eulerAngles.z;
-        ladderPrevConstraints = rb.constraints;
-
-        // 2.5D typical: keep Z position fixed, allow Z rotation to tilt with ladder.
-        // Freeze X/Y rotation so physics cannot tip the character forward/back.
-        rb.constraints =
-            RigidbodyConstraints.FreezePositionZ |
-            RigidbodyConstraints.FreezeRotationX |
-            RigidbodyConstraints.FreezeRotationY;
-
-        Vector3 v = rb.linearVelocity;
-        v.y = 0f;
-        rb.linearVelocity = v;
-
-        currentState = MovementState.Ladder;
-        
-        if (ladderDebugLogs)
-            Debug.Log($"[Ladder] ATTACH -> {ladder.name}", this);
-    }
-
-    public void NotifyLadderExit(Ladder ladder)
-    {
-        if (!isOnLadder)
-            return;
-             
-       if (ladder == null)
-            return;
-
-        if (currentLadder != ladder)
-            return;
-
-        if (ladderDebugLogs)
-            Debug.Log($"[Ladder] EXIT <- {ladder.name}", this);
-
-        // Don't detach immediately.
-        // The trigger can be exited due to snapping/offset even while we're still valid.
-        // Mark it and let HandleLadderMovement decide using distance checks.
-        ladderSawExit = true;
-        ladderExitGraceTimer = ladderExitGraceTime;
-    }
-
-    public void DetachFromLadder(bool jumpOff)
-    {
-        if (!isOnLadder)
-            return;
-        
-        if (ladderDebugLogs)
-            Debug.Log($"[Ladder] DETACH <- {(currentLadder != null ? currentLadder.name : "null")} jumpOff={jumpOff}", this);
-
-        SetLadderCollisionIgnored(currentLadder, false);
-        
-        if (rb != null)
-            rb.useGravity = ladderPrevUseGravity;
-        
-        rb.constraints = ladderPrevConstraints;
-
-        isOnLadder = false;
-        
-        if (rb != null && currentLadder != null)
-        {
-            Vector3 axis = currentLadder.GetClimbAxis();
-            Vector3 v = rb.linearVelocity;
-
-            // Remove any velocity along the ladder axis so we don't keep "climbing" in air
-            v -= axis * Vector3.Dot(v, axis);
-
-            rb.linearVelocity = v;
-        }
-
-        currentLadder = null;
-
-        if (rb == null)
-            return;
-
-        if (jumpOff)
-        {
-            Vector3 v = rb.linearVelocity;
-            v.y = jumpForce;
-
-            float dir = FacingRight ? 1f : -1f;
-            v.x = dir * ladderJumpOffHorizontalSpeed;
-
-            rb.linearVelocity = v;
-
-            OnJump?.Invoke();
-            currentState = MovementState.Jumping;
-        }
-        else
-        {
-            float h = Mathf.Abs(HorizontalInput);
-            currentState = h > 0.1f ? MovementState.Walking : MovementState.Idle;
-        }
-    }
-
-    private void HandleLadderMovement()
-    {
-        if (rb == null)
-            return;
-
-        if (currentLadder == null|| !currentLadder.isActiveAndEnabled)
-        {
-            if (ladderDebugLogs && currentLadder == null)
-                Debug.Log("[Ladder] DETACH <- null ladder reference", this);
-
-            DetachFromLadder(false);
-            return;
-        }
-
-        if (ladderAttachGraceTimer > 0f)
-            ladderAttachGraceTimer -= Time.fixedDeltaTime;
-
-        if (!currentLadder.CanAttachFrom(tr.position))
-        {
-            if (ladderDebugLogs)
-                Debug.Log($"[Ladder] DETACH <- {currentLadder.name} reason=backside", this);
-
-            DetachFromLadder(false);
-                return;
-        }
-
-        Vector3 axis = currentLadder.GetLadderUp();
-
-        float playerRadius = col != null ? col.radius : 0.25f;
-        float snapOffset = playerRadius + ladderSurfaceOffset;
-
-        // Target position is projected onto ladder axis and offset in front of ladder surface.
-        Vector3 targetPos = currentLadder.GetSnapWorldPosition(tr.position, snapOffset);
-
-        // Detach distance should match the “no touch” rule:
-        // stay attached if we're within ladder lateral radius + playerRadius + padding.
-        float ladderRadius = GetLadderLateralRadius(currentLadder, axis);
-        float detachDistance = ladderRadius + playerRadius + ladderSurfacePadding + 0.02f;
-
-        // Sideways-only distance (ignore climb axis and surface offset)
-        Vector3 toPlayer = tr.position - targetPos;
-        toPlayer -= axis * Vector3.Dot(toPlayer, axis);
-        float lateralDist = toPlayer.magnitude;
-
-        if (ladderSawExit)
-        {
-            ladderExitGraceTimer -= Time.fixedDeltaTime;
-
-            if (ladderExitGraceTimer <= 0f && lateralDist > detachDistance)
-            {
-                DetachFromLadder(false);
-                return;
-            }
-        }
-
-        if (lateralDist <= detachDistance)
-            ladderSawExit = false;
-
-        currentState = MovementState.Ladder;
-
-        // Rotate player upright relative to ladder axis
-        Vector3 forward = Vector3.forward;
-        if (Mathf.Abs(Vector3.Dot(forward, axis)) > 0.98f)
-            forward = cachedRight;
-
-        Quaternion targetRot = Quaternion.LookRotation(forward, axis);
-        float rotT = 1f - Mathf.Exp(-ladderRotateSpeed * Time.fixedDeltaTime);
-        rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRot, rotT));
-
-        // Snap toward target position (spine + outward offset)
-        float snapT = 1f - Mathf.Exp(-ladderSnapSpeed * Time.fixedDeltaTime);
-        tr.position = Vector3.Lerp(tr.position, targetPos, snapT);
-
-        // Step off at top (only when moving up)
-        if (ladderStepOffAtTop && VerticalInput > 0.1f)
-        {
-            Vector3 top = currentLadder.GetTopPoint();
-            float alongToTop = Vector3.Dot(top - tr.position, axis);
-
-            if (alongToTop <= ladderTopStepOffDistance)
-            {
-                StepOffLadderTop();
-                return;
-            }
-        }
-
-        // Jump off ladder
-        if (Input.GetButtonDown("Jump"))
-        {
-            DetachFromLadder(true);
-            return;
-        }
-
-        // Detach by pushing sideways away from the ladder
-        if (detachOnHorizontalInput && ladderAttachGraceTimer <= 0f)
-        {
-            Vector3 sideways = Vector3.ProjectOnPlane(cachedRight, axis).normalized;
-
-            if (sideways.sqrMagnitude > 0.0001f)
-            {
-                float sideOffset = Vector3.Dot(tr.position - targetPos, sideways);
-                float input = HorizontalInput;
-
-                bool pushingAway =
-                    (sideOffset < -0.01f && input < -detachHorizontalThreshold) ||
-                    (sideOffset >  0.01f && input >  detachHorizontalThreshold);
-
-                if (pushingAway)
-                {
-                    DetachFromLadder(false);
-                    return;
-                }
-            }
-        }
-
-        // Climb along ladder axis
-        float vInput = VerticalInput;
-
-        Vector3 v = rb.linearVelocity;
-
-        v -= axis * Vector3.Dot(v, axis);
-        v += axis * (vInput * ladderClimbSpeed);
-
-        rb.linearVelocity = v;
-
-        if (ladderDebugLogs)
-        {
-            ladderDebugTimer -= Time.fixedDeltaTime;
-            if (ladderDebugTimer <= 0f)
-            {
-                ladderDebugTimer = Mathf.Max(0.05f, ladderDebugInterval);
-
-                float velAlong = Vector3.Dot(rb.linearVelocity, axis);
-                Debug.Log($"[Ladder] vInput={vInput:0.00} velAlong={velAlong:0.00} lateralDist={lateralDist:0.000} detachDist={detachDistance:0.000} grace={ladderAttachGraceTimer:0.000}", this);
-            }
-        }
-
-        VerticalVelocity = Vector3.Dot(rb.linearVelocity, axis);
-    }
-
-    private float GetLadderLateralRadius(Ladder ladder, Vector3 axis)
-    {
-        Bounds b = ladder.GetWorldBounds();
-        Vector3 c = b.center;
-        Vector3 e = b.extents;
-
-        float best = 0f;
-
-        for (int xi = -1; xi <= 1; xi += 2)
-        for (int yi = -1; yi <= 1; yi += 2)
-        for (int zi = -1; zi <= 1; zi += 2)
-        {
-            Vector3 p = c + new Vector3(e.x * xi, e.y * yi, e.z * zi);
-
-            // Measure only sideways distance to the axis.
-            Vector3 lateral = p - c;
-            lateral -= axis * Vector3.Dot(lateral, axis);
-
-            float d = lateral.magnitude;
-            if (d > best) best = d;
-        }
-
-        return best;
-    }
     
-    private void UpdateUprightRotation()
-    {
-        if (rb == null)
-            return;
-
-        Quaternion current = rb.rotation;
-        Quaternion target = Quaternion.Euler(0f, 0f, 0f);
-
-        float t = 1f - Mathf.Exp(-uprightRotateSpeed * Time.fixedDeltaTime);
-        rb.MoveRotation(Quaternion.Slerp(current, target, t));
-    }
-    
-    private void StepOffLadderTop()
-    {
-        if (rb == null || currentLadder == null)
-            return;
-
-        Ladder ladder = currentLadder;
-        Vector3 axis = ladder.GetLadderUp();
-        Vector3 top = ladder.GetTopPoint();
-
-        Vector3 sideways = Vector3.ProjectOnPlane(cachedRight, axis).normalized;
-        if (sideways.sqrMagnitude < 0.0001f)
-            sideways = cachedRight;
-
-        float sideSign = Mathf.Abs(HorizontalInput) > 0.1f
-            ? Mathf.Sign(HorizontalInput)
-            : (FacingRight ? 1f : -1f);
-
-        // Stop ladder-axis motion so we don't keep "climbing" in air
-        Vector3 v = rb.linearVelocity;
-        v -= axis * Vector3.Dot(v, axis);
-        rb.linearVelocity = v;
-
-        DetachFromLadder(false);
-
-        // Place on top and slightly away from ladder
-        tr.position = top
-                      + axis * ladderStepOffUpOffset
-                      + sideways * (sideSign * ladderStepOffSideOffset);
-    }
-    
-    private void SetLadderCollisionIgnored(Ladder ladder, bool ignored)
-    {
-        if (col == null)
-            return;
-
-        if (ignored)
-        {
-            if (ladder == null)
-                return;
-                
-            ignoredLadderColliders.Clear();
-
-            // Grab ladder colliders (root + children). This covers “ladder volume + any extra pieces”.
-            Collider[] ladderCols = ladder.GetComponentsInChildren<Collider>(true);
-            foreach (Collider lc in ladderCols)
-            {
-                if (lc == null)
-                    continue;
-
-                // Never ignore trigger colliders, or we'll instantly "exit" the ladder trigger and detach.
-                if (lc.isTrigger)
-                    continue;
-
-                Physics.IgnoreCollision(col, lc, true);
-                ignoredLadderColliders.Add(lc);
-            }
-
-            return;
-        }
-
-        // Restore collisions on detach (including if ladder object got disabled/destroyed).
-        foreach (Collider lc in ignoredLadderColliders)
-        {
-            if (lc != null)
-                Physics.IgnoreCollision(col, lc, false);
-        }
-
-        ignoredLadderColliders.Clear();
-    }
-    #endregion
 
     
     /// <summary>
