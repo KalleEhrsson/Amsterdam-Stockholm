@@ -6,7 +6,7 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     // Simple movement state machine
-    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Falling = 3, Crouching = 4, Ladder = 5 }
+    public enum MovementState { Idle = 0, Walking = 1, Jumping = 2, Falling = 3, Crouching = 4}
     private MovementState currentState = MovementState.Idle;
     
     public enum SurfaceType { Wood = 0, Metal = 1 }
@@ -135,8 +135,9 @@ public class Movement : MonoBehaviour
     #region Ladder State
     private bool isOnLadder;
     private Ladder currentLadder;
-
+    private int ladderOverlapCount;
     private bool ladderCachedUseGravity;
+    private float ladderLockedZ;
     #endregion
 
     /// <summary>
@@ -475,7 +476,7 @@ public class Movement : MonoBehaviour
         // Apply the horizontal components from the desired slope-aware vector. Leave vertical velocity intact
         // so jumping/falling still behaves as expected.
         v.x = desired.x;
-        v.z = desired.z;
+        v.z = 0f;
 
         // Small stick-to-ground force: while grounded and not jumping up, push the character into the ground
         // along the ground normal so they don't 'hop' on small geometry when walking uphill.
@@ -827,9 +828,18 @@ public class Movement : MonoBehaviour
     {
         if (ladder == null || rb == null)
             return;
-        
+
+        // If we're already on this ladder, just increase overlap count
+        if (isOnLadder && currentLadder == ladder)
+        {
+            ladderOverlapCount++;
+            return;
+        }
+
         currentLadder = ladder;
         isOnLadder = true;
+        ladderLockedZ = rb.position.z;
+        ladderOverlapCount = 1;
 
         ladderCachedUseGravity = rb.useGravity;
         rb.useGravity = false;
@@ -838,20 +848,29 @@ public class Movement : MonoBehaviour
         rb.position = currentLadder.GetSnappedPosition(rb.position);
         currentLadder.AlignPlayerYaw(tr);
 
-        currentState = MovementState.Ladder;
+        currentState = MovementState.Idle;
     }
 
-    private void BeginLadder()
+    public void ExitLadder(Ladder ladder)
     {
-        if (!isOnLadder || rb == null)
+        if (!isOnLadder)
+            return;
+
+        // Ignore exits from other ladders or unrelated triggers
+        if (ladder != null && ladder != currentLadder)
+            return;
+
+        ladderOverlapCount = Mathf.Max(0, ladderOverlapCount - 1);
+        if (ladderOverlapCount > 0)
             return;
 
         isOnLadder = false;
         currentLadder = null;
 
-        rb.useGravity = ladderCachedUseGravity;
+        if (rb != null)
+            rb.useGravity = ladderCachedUseGravity;
 
-        if (currentState == MovementState.Ladder)
+        if (currentState == MovementState.Idle)
             currentState = MovementState.Falling;
     }
 
@@ -859,7 +878,7 @@ public class Movement : MonoBehaviour
     {
         if (!isOnLadder || currentLadder == null || rb == null)
         {
-            ExitLadder();
+            ExitLadder(currentLadder);
             return;
         }
 
@@ -867,7 +886,7 @@ public class Movement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump"))
         {
-            ExitLadder();
+            ExitLadder(currentLadder);
             return;
         }
 
@@ -879,11 +898,12 @@ public class Movement : MonoBehaviour
 
         Vector3 target = currentLadder.ClampToBounds(position + movement);
         target = currentLadder.GetSnappedPosition(target);
+        target.z = ladderLockedZ;
 
         rb.MovePosition(target);
         currentLadder.AlignPlayerYaw(tr);
 
-        currentState = MovementState.Ladder;
+        currentState = MovementState.Idle;
     }
     #endregion
     
@@ -1097,7 +1117,6 @@ public class Movement : MonoBehaviour
         Gizmos.DrawWireSphere(currentBottom, c.radius);
 
         // ---------- Standing clearance capsule (red) ----------
-        // This exactly matches HasStandingClearance()
         Gizmos.color = Color.red;
 
         Vector3 standCenter = t.TransformPoint(originalCenter);

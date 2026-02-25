@@ -6,6 +6,8 @@ public sealed class Ladder : MonoBehaviour
     #region Inspector
     [Header("Ladder")]
     [SerializeField] private float climbSpeed = 4.5f;
+    [SerializeField] private bool invertSnapSide;
+    [SerializeField] private float snapForwardOffset = 0.25f;
     [SerializeField] private Transform snapOverride;
     [SerializeField] private Transform topMarker;
     [SerializeField] private Transform bottomMarker;
@@ -38,7 +40,7 @@ public sealed class Ladder : MonoBehaviour
         if (movement == null)
             return;
 
-        movement.ExitLadder();
+        movement.ExitLadder(this);
     }
     #endregion
 
@@ -46,9 +48,21 @@ public sealed class Ladder : MonoBehaviour
     public Vector3 GetSnappedPosition(Vector3 playerPosition)
     {
         Vector3 origin = snapOverride != null ? snapOverride.position : transform.position;
+
         Vector3 ladderUp = transform.up;
         Vector3 projected = origin + Vector3.Project(playerPosition - origin, ladderUp);
-        return projected;
+
+        Vector3 flatForward = Vector3.ProjectOnPlane(transform.right, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            return projected;
+
+        flatForward.Normalize();
+
+        float sideSign = Mathf.Sign(Vector3.Dot(playerPosition - origin, flatForward));
+        if (sideSign == 0f) sideSign = 1f;
+        if (invertSnapSide) sideSign *= -1f;
+
+        return projected + flatForward * (snapForwardOffset * sideSign);
     }
 
     public Vector3 ClampToBounds(Vector3 position)
@@ -61,12 +75,21 @@ public sealed class Ladder : MonoBehaviour
         float maxAxis = GetTopAxis(origin, ladderUp);
 
         if (minAxis > maxAxis)
-        {
             (minAxis, maxAxis) = (maxAxis, minAxis);
-        }
 
         float clampedAxis = Mathf.Clamp(axis, minAxis, maxAxis);
-        return origin + ladderUp * clampedAxis;
+
+        Vector3 flatForward = Vector3.ProjectOnPlane(transform.right, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            return origin + ladderUp * clampedAxis;
+
+        flatForward.Normalize();
+
+        float sideSign = Mathf.Sign(Vector3.Dot(position - origin, flatForward));
+        if (sideSign == 0f) sideSign = 1f;
+        if (invertSnapSide) sideSign *= -1f;
+
+        return origin + ladderUp * clampedAxis + flatForward * (snapForwardOffset * sideSign);
     }
 
     public void AlignPlayerYaw(Transform playerTransform)
