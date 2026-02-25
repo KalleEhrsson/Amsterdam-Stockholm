@@ -132,23 +132,11 @@ public class Movement : MonoBehaviour
     [SerializeField] private float crouchJumpMultiplier = 0.6f;
     #endregion
 
-    #region Inspector: Ladder
-    [SerializeField] private float ladderClimbSpeed = 4.5f;
-    [SerializeField] private float ladderEnterDeadzone = 0.1f;
-    [SerializeField] private float ladderExitDeadzone = 0.05f;
-    [SerializeField] private float ladderJumpOffHorizontalSpeed = 2.0f;
-
-    // Ladder state
-    private bool canClimbLadder;
+    #region Ladder State
     private bool isOnLadder;
-    private float ladderCenterX;
-    private float ladderSnapSpeed;
     private Ladder currentLadder;
 
-    // Cached RB settings while climbing
     private bool ladderCachedUseGravity;
-    private float ladderCachedDrag;
-    private RigidbodyConstraints ladderCachedConstraints;
     #endregion
 
     /// <summary>
@@ -272,28 +260,12 @@ public class Movement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float v = Input.GetAxisRaw("Vertical");
-        bool jumpPressed = Input.GetButtonDown("Jump");
-
-        if (canClimbLadder)
+        if (isOnLadder)
         {
-            if (!isOnLadder)
-            {
-                if (Mathf.Abs(v) >= ladderEnterDeadzone)
-                    BeginLadder();
-            }
-
-            if (isOnLadder)
-            {
-                TickLadder(v, jumpPressed, facingRight: /* your facing bool */ true);
-                return;
-            }
+            HandleLadderMovement();
+            return;
         }
-        else
-        {
-            if (isOnLadder)
-                EndLadder();
-        }
+        
         // Keep cached transform axes fresh for physics-step methods.
         UpdateCachedTransform();
         
@@ -851,97 +823,67 @@ public class Movement : MonoBehaviour
     #endregion
 
     #region Ladder
-    public void SetLadder(Ladder ladder, float centerX, float snapSpeed)
+    public void EnterLadder(Ladder ladder)
     {
-        currentLadder = ladder;
-        ladderCenterX = centerX;
-        ladderSnapSpeed = Mathf.Max(0f, snapSpeed);
-        canClimbLadder = true;
-    }
-
-    public void ClearLadder(Ladder ladder)
-    {
-        if (currentLadder != ladder)
+        if (ladder == null || rb == null)
             return;
+        
+        currentLadder = ladder;
+        isOnLadder = true;
 
-        currentLadder = null;
-        canClimbLadder = false;
+        ladderCachedUseGravity = rb.useGravity;
+        rb.useGravity = false;
 
-        if (isOnLadder)
-            EndLadder();
+        rb.linearVelocity = Vector3.zero;
+        rb.position = currentLadder.GetSnappedPosition(rb.position);
+        currentLadder.AlignPlayerYaw(tr);
+
+        currentState = MovementState.Ladder;
     }
 
     private void BeginLadder()
     {
-        if (isOnLadder)
-            return;
-
-        isOnLadder = true;
-
-        ladderCachedUseGravity = rb.useGravity;
-        ladderCachedDrag = rb.linearDamping;
-        ladderCachedConstraints = rb.constraints;
-
-        rb.useGravity = false;
-        rb.linearDamping = 0f;
-
-        // Optional: lock rotation while on ladder if your game expects it
-        // rb.constraints = RigidbodyConstraints.FreezeRotation;
-
-        var v = rb.linearVelocity;
-        v.y = 0f;
-        rb.linearVelocity = v;
-    }
-
-    private void TickLadder(float verticalInput, bool jumpPressed, bool facingRight)
-    {
-        if (!isOnLadder)
-            return;
-
-        if (currentLadder == null)
-        {
-            EndLadder();
-            return;
-        }
-
-        if (jumpPressed)
-        {
-            EndLadder();
-
-            var v = rb.linearVelocity;
-            v.y = jumpForce;
-            v.x = (facingRight ? 1f : -1f) * ladderJumpOffHorizontalSpeed;
-            v.z = 0f;
-            rb.linearVelocity = v;
-            return;
-        }
-
-        var pos = rb.position;
-        pos.x = Mathf.MoveTowards(pos.x, ladderCenterX, ladderSnapSpeed * Time.fixedDeltaTime);
-
-        float yVel = 0f;
-        if (Mathf.Abs(verticalInput) > ladderExitDeadzone)
-            yVel = verticalInput * ladderClimbSpeed;
-
-        var vel = rb.linearVelocity;
-        vel.x = 0f;
-        vel.z = 0f;
-        vel.y = yVel;
-
-        rb.MovePosition(pos);
-        rb.linearVelocity = vel;
-    }
-
-    private void EndLadder()
-    {
-        if (!isOnLadder)
+        if (!isOnLadder || rb == null)
             return;
 
         isOnLadder = false;
+        currentLadder = null;
 
         rb.useGravity = ladderCachedUseGravity;
-        rb.linearDamping = ladderCachedDrag;
-        rb.constraints = ladderCachedConstraints;
+
+        if (currentState == MovementState.Ladder)
+            currentState = MovementState.Falling;
+    }
+
+    private void HandleLadderMovement()
+    {
+        if (!isOnLadder || currentLadder == null || rb == null)
+        {
+            ExitLadder();
+            return;
+        }
+
+        float v = Input.GetAxis("Vertical");
+
+        if (Input.GetButtonDown("Jump"))
+        {
+            ExitLadder();
+            return;
+        }
+
+        rb.linearVelocity = Vector3.zero;
+
+        Vector3 position = currentLadder.GetSnappedPosition(rb.position);
+        Vector3 ladderUp = currentLadder.transform.up;
+        Vector3 movement = ladderUp * (v * currentLadder.ClimbSpeed * Time.fixedDeltaTime);
+
+        Vector3 target = currentLadder.ClampToBounds(position + movement);
+        target = currentLadder.GetSnappedPosition(target);
+
+        rb.MovePosition(target);
+        currentLadder.AlignPlayerYaw(tr);
+
+        currentState = MovementState.Ladder;
     }
     #endregion
     
