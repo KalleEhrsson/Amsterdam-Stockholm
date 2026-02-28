@@ -42,6 +42,14 @@ public class Movement : MonoBehaviour
     public event Action OnInteract;
     #endregion
     #endregion
+    
+    #region Ladder State
+    private bool isOnLadder;
+    private SimpleLadder currentLadder;
+    private bool ladderCachedUseGravity;
+    private float ladderLockedZ;
+    private float ladderSnapOffsetOverride;
+    #endregion
 
     /// <summary>
     /// Animation: read-only values consumed by the animation controller.
@@ -113,6 +121,12 @@ public class Movement : MonoBehaviour
     [SerializeField, Tooltip("Small offset downward applied to ground check origin to reduce false negatives.")]
     private float groundBottomBias = 0.05f;
     #endregion
+    
+    #region Inspector: Surface Detection
+    [Header("Surface Detection (Physics Material)")]
+    [SerializeField] private PhysicsMaterial woodMaterial;
+    [SerializeField] private PhysicsMaterial metalMaterial;
+    #endregion
 
     /// <summary>
     /// Inspector: crouch-related settings (visuals, timings)
@@ -130,14 +144,6 @@ public class Movement : MonoBehaviour
 
     [Tooltip("Jump height multiplier applied when jumping while crouched.")]
     [SerializeField] private float crouchJumpMultiplier = 0.6f;
-    #endregion
-
-    #region Ladder State
-    private bool isOnLadder;
-    private Ladder currentLadder;
-    private int ladderOverlapCount;
-    private bool ladderCachedUseGravity;
-    private float ladderLockedZ;
     #endregion
 
     /// <summary>
@@ -233,7 +239,7 @@ public class Movement : MonoBehaviour
             visual ??= transform;
         }
     }
-
+    
     private void Start()
     {
         // Runtime speed is derived from base speed plus modifiers (crouch, slows).
@@ -261,14 +267,14 @@ public class Movement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Keep cached transform axes fresh for physics-step methods.
+        UpdateCachedTransform();
+        
         if (isOnLadder)
         {
             HandleLadderMovement();
             return;
         }
-        
-        // Keep cached transform axes fresh for physics-step methods.
-        UpdateCachedTransform();
         
         // Cache ground check once per physics step to avoid duplicate Physics queries.
         bool prevGrounded = isGrounded;
@@ -823,90 +829,6 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
-    #region Ladder
-    public void EnterLadder(Ladder ladder)
-    {
-        if (ladder == null || rb == null)
-            return;
-
-        // If we're already on this ladder, just increase overlap count
-        if (isOnLadder && currentLadder == ladder)
-        {
-            ladderOverlapCount++;
-            return;
-        }
-
-        currentLadder = ladder;
-        isOnLadder = true;
-        ladderLockedZ = rb.position.z;
-        ladderOverlapCount = 1;
-
-        ladderCachedUseGravity = rb.useGravity;
-        rb.useGravity = false;
-
-        rb.linearVelocity = Vector3.zero;
-        rb.position = currentLadder.GetSnappedPosition(rb.position);
-        currentLadder.AlignPlayerYaw(tr);
-
-        currentState = MovementState.Idle;
-    }
-
-    public void ExitLadder(Ladder ladder)
-    {
-        if (!isOnLadder)
-            return;
-
-        // Ignore exits from other ladders or unrelated triggers
-        if (ladder != null && ladder != currentLadder)
-            return;
-
-        ladderOverlapCount = Mathf.Max(0, ladderOverlapCount - 1);
-        if (ladderOverlapCount > 0)
-            return;
-
-        isOnLadder = false;
-        currentLadder = null;
-
-        if (rb != null)
-            rb.useGravity = ladderCachedUseGravity;
-
-        if (currentState == MovementState.Idle)
-            currentState = MovementState.Falling;
-    }
-
-    private void HandleLadderMovement()
-    {
-        if (!isOnLadder || currentLadder == null || rb == null)
-        {
-            ExitLadder(currentLadder);
-            return;
-        }
-
-        float v = Input.GetAxis("Vertical");
-
-        if (Input.GetButtonDown("Jump"))
-        {
-            ExitLadder(currentLadder);
-            return;
-        }
-
-        rb.linearVelocity = Vector3.zero;
-
-        Vector3 position = currentLadder.GetSnappedPosition(rb.position);
-        Vector3 ladderUp = currentLadder.transform.up;
-        Vector3 movement = ladderUp * (v * currentLadder.ClimbSpeed * Time.fixedDeltaTime);
-
-        Vector3 target = currentLadder.ClampToBounds(position + movement);
-        target = currentLadder.GetSnappedPosition(target);
-        target.z = ladderLockedZ;
-
-        rb.MovePosition(target);
-        currentLadder.AlignPlayerYaw(tr);
-
-        currentState = MovementState.Idle;
-    }
-    #endregion
-    
     /// <summary>
     /// Public API for temporary slows
     /// </summary>
@@ -999,21 +921,33 @@ public class Movement : MonoBehaviour
         float castDistance = groundCastDistance;
 
         if (Physics.SphereCast(
-            origin,
-            radius,
-            -cachedUp,
-            out RaycastHit hit,
-            castDistance,
-            groundLayer,
-            QueryTriggerInteraction.Ignore
-        ))
+                origin,
+                radius,
+                -cachedUp,
+                out RaycastHit hit,
+                castDistance,
+                groundLayer,
+                QueryTriggerInteraction.Ignore
+            ))
         {
-            // Record the ground normal we hit so movement can be projected onto slopes.
+            
+            Debug.Log($"Ground hit: {hit.collider.name} | Layer: {hit.collider.gameObject.layer} | PhysicMat: {(hit.collider.sharedMaterial ? hit.collider.sharedMaterial.name : "NULL")}");
+            
             lastGroundNormal = hit.normal;
-
-            // Record slope angle relative to world up and whether it's considered steep.
             lastSlopeAngleDeg = Vector3.Angle(hit.normal, Vector3.up);
             isOnSteepSlope = lastSlopeAngleDeg > maxWalkableSlopeDegrees;
+
+            PhysicsMaterial pm = hit.collider != null ? hit.collider.sharedMaterial : null;
+
+            CurrentSurface = SurfaceType.Wood;
+
+            if (pm != null)
+            {
+                if (pm == metalMaterial)
+                    CurrentSurface = SurfaceType.Metal;
+                else if (pm == woodMaterial)
+                    CurrentSurface = SurfaceType.Wood;
+            }
 
             return true;
         }
@@ -1087,9 +1021,95 @@ public class Movement : MonoBehaviour
 
         groundLayer = 1 << layerIndex;
     }
-    
-    
 
+    #region Ladder
+    private void OnTriggerEnter(Collider other)
+    {
+        SimpleLadder ladder = other.GetComponent<SimpleLadder>();
+        if (ladder == null)
+            return;
+
+        EnterLadder(ladder);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        SimpleLadder ladder = other.GetComponent<SimpleLadder>();
+        if (ladder == null)
+            return;
+
+        if (ladder == currentLadder)
+            ExitLadder();
+    }
+
+    private void EnterLadder(SimpleLadder ladder)
+    {
+        if (rb == null)
+            return;
+
+        isOnLadder = true;
+        currentLadder = ladder;
+
+        ladderCachedUseGravity = rb.useGravity;
+        rb.useGravity = false;
+
+        ladderLockedZ = transform.position.z;
+
+        rb.linearVelocity = Vector3.zero;
+
+        SnapToLadder();
+
+        currentState = MovementState.Idle;
+    }
+
+    private void ExitLadder()
+    {
+        if (rb == null)
+            return;
+
+        isOnLadder = false;
+        currentLadder = null;
+
+        rb.useGravity = ladderCachedUseGravity;
+    }
+
+    private void SnapToLadder()
+    {
+        if (currentLadder == null)
+            return;
+
+        float snapOffset = ladderSnapOffsetOverride != 0f
+            ? ladderSnapOffsetOverride
+            : currentLadder.SnapOffsetX;
+
+        Vector3 p = transform.position;
+        p.x = currentLadder.transform.position.x + snapOffset;
+        p.z = ladderLockedZ;
+
+        transform.position = p;
+    }
+
+    private void HandleLadderMovement()
+    {
+        if (rb == null || currentLadder == null)
+            return;
+
+        float vInput = Input.GetAxis("Vertical");
+
+        Vector3 v = rb.linearVelocity;
+        v.x = 0f;
+        v.y = vInput * currentLadder.ClimbSpeed;
+        v.z = 0f;
+
+        rb.linearVelocity = v;
+
+        SnapToLadder();
+
+        currentState = Mathf.Abs(vInput) > 0.01f
+            ? MovementState.Walking
+            : MovementState.Idle;
+    }
+    #endregion
     
     /// <summary>
     /// Debug gizmos to visualize collider and standing capsule

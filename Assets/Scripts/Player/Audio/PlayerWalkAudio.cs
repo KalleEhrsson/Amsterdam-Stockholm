@@ -80,7 +80,6 @@ public sealed class PlayerWalkAudio : MonoBehaviour
 
         bool shouldPlay =
             movement.IsGrounded &&
-            movement.CurrentState == Movement.MovementState.Walking &&
             movement.HorizontalSpeedNormalized >= minSpeedToPlay;
 
         if (!shouldPlay)
@@ -113,7 +112,7 @@ public sealed class PlayerWalkAudio : MonoBehaviour
             lastClip = clip;
 
             ApplyClipSettings(clip, volume, pitchMin, pitchMax);
-
+            
             if (clip != null)
                 source.Play();
 
@@ -130,8 +129,10 @@ public sealed class PlayerWalkAudio : MonoBehaviour
     {
         loopMap.Clear();
 
-        foreach (SurfaceLoopEntry e in surfaceLoops)
+        for (int i = 0; i < surfaceLoops.Count; i++)
         {
+            SurfaceLoopEntry e = surfaceLoops[i];
+
             // Last one wins if duplicates exist
             loopMap[e.surface] = e;
         }
