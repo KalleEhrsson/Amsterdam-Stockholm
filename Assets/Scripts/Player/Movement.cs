@@ -43,31 +43,16 @@ public class Movement : MonoBehaviour
     #endregion
     #endregion
     
-    #region Ladder State
-    private bool isOnLadder;
-    private SimpleLadder currentLadder;
-    private bool ladderCachedUseGravity;
-    private float ladderLockedZ;
-    private float ladderSnapOffsetOverride;
-    #endregion
-
     /// <summary>
     /// Animation: read-only values consumed by the animation controller.
     /// </summary>
     #region Animation (Exposed)
     public bool FacingRight { get; private set; } = true;
-    public bool IsPushing { get; private set; }
     public float HorizontalInput { get; private set; }
     public float HorizontalSpeedNormalized { get; private set; }
     public float VerticalVelocity { get; private set; }
     public float MoveX => HorizontalInput;
     public float IdleX => FacingRight ? 1f : -1f;
-    #endregion
-
-    #region Inspector: Pushing
-    [Header("Pushing")]
-    [SerializeField] private LayerMask pushableLayers;
-    [SerializeField] private float pushingDotThreshold = 0.35f; // higher = must push more straight into it
     #endregion
 
     /// <summary>
@@ -169,6 +154,11 @@ public class Movement : MonoBehaviour
     private float jumpBufferCounter;
     private float coyoteCounter;
     #endregion
+    
+    #region Input Cache
+    private float horizontalInputRaw;
+    private bool jumpHeld;
+    #endregion
 
     /// <summary>
     /// Runtime crouch state and lerp bookkeeping
@@ -259,7 +249,9 @@ public class Movement : MonoBehaviour
         HandleInteractInput();
 
         float h = Input.GetAxis("Horizontal");
+        horizontalInputRaw = h;
         HorizontalInput = h;
+        jumpHeld = Input.GetButton("Jump");
         
         if (Mathf.Abs(h) > 0.01f)
             FacingRight = h > 0f;
@@ -269,12 +261,6 @@ public class Movement : MonoBehaviour
     {
         // Keep cached transform axes fresh for physics-step methods.
         UpdateCachedTransform();
-        
-        if (isOnLadder)
-        {
-            HandleLadderMovement();
-            return;
-        }
         
         // Cache ground check once per physics step to avoid duplicate Physics queries.
         bool prevGrounded = isGrounded;
@@ -308,10 +294,9 @@ public class Movement : MonoBehaviour
         {
             OnLand?.Invoke();
             // decide Idle/Walking on land
-            float h = Input.GetAxis("Horizontal");
             if (isCrouching)
                 currentState = MovementState.Crouching;
-            else if (Mathf.Abs(h) > 0.1f)
+            else if (Mathf.Abs(horizontalInputRaw) > 0.1f)
                 currentState = MovementState.Walking;
             else
                 currentState = MovementState.Idle;
@@ -380,7 +365,7 @@ public class Movement : MonoBehaviour
         // We allow a grace period or until uphillSpeedMultiplier decays to near zero before full slip.
         bool isSlippingOnSteepSlope = isOnSteepSlope && (steepSlopeTimer >= steepSlopeGraceTime || uphillSpeedMultiplier <= 0.05f);
 
-        float moveInput = Input.GetAxis("Horizontal");
+        float moveInput = horizontalInputRaw;
         
         // Compute the true base runtime speed from baseSpeedRuntime plus slows/external multipliers.
         // Do NOT read from moveSpeedRuntime here because moveSpeedRuntime is used as a display
@@ -547,8 +532,7 @@ public class Movement : MonoBehaviour
         if (currentState == MovementState.Jumping || currentState == MovementState.Falling || currentState == MovementState.Crouching)
             return;
 
-        float h = Input.GetAxis("Horizontal");
-        currentState = Mathf.Abs(h) > 0.1f
+        currentState = Mathf.Abs(horizontalInputRaw) > 0.1f
             ? MovementState.Walking
             : MovementState.Idle;
     }
@@ -556,8 +540,6 @@ public class Movement : MonoBehaviour
     private void OnCollisionStay(Collision collision)
     {
         hasWallNormal = false;
-
-        bool foundPush = false;
 
         for (int i = 0; i < collision.contactCount; i++)
         {
@@ -571,34 +553,13 @@ public class Movement : MonoBehaviour
             lastWallNormal = n;
             hasWallNormal = true;
 
-            // Pushing detection
-            if (!foundPush && isGrounded && Mathf.Abs(HorizontalInput) > 0.01f)
-            {
-                int otherLayerMask = 1 << collision.gameObject.layer;
-                bool isPushableLayer = (pushableLayers.value & otherLayerMask) != 0;
-
-                Rigidbody otherRb = collision.rigidbody; // may be null if static collider
-                bool hasPushableRb = otherRb != null && !otherRb.isKinematic;
-
-                if (isPushableLayer && hasPushableRb)
-                {
-                    Vector3 pushDir = cachedRight * Mathf.Sign(HorizontalInput);
-                    float into = Vector3.Dot(pushDir, -n); // >0 means pushing into the surface
-                    if (into >= pushingDotThreshold)
-                        foundPush = true;
-                }
-            }
-
             break;
         }
-
-        IsPushing = foundPush;
     }
 
     private void OnCollisionExit(Collision _)
     {
         hasWallNormal = false;
-        IsPushing = false;
     }
     #endregion
 
@@ -660,7 +621,7 @@ public class Movement : MonoBehaviour
         }
 
         // Ascending but jump button released: cut the jump by applying extra gravity.
-        if (v.y > 0f && !Input.GetButton("Jump"))
+        if (v.y > 0f && !jumpHeld)
         {
             float gravityScale = (lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
             v += Physics.gravity * gravityScale;
@@ -703,13 +664,7 @@ public class Movement : MonoBehaviour
         crouchSpeed = moveSpeed * 0.5f;
 
         // Cache collider geometry used by ground checks to avoid repeated property access.
-        if (col != null)
-        {
-            cachedColRadius = col.radius;
-            cachedHalfHeight = Mathf.Max(col.height * 0.5f, col.radius);
-            cachedBottomOffset = cachedHalfHeight - col.radius;
-            cachedColCenterLocal = col.center;
-        }
+        RefreshCachedColliderGeometry();
     }
 
     private void StartCrouch()
@@ -772,13 +727,7 @@ public class Movement : MonoBehaviour
         col.center = new Vector3(originalCenter.x, newCenterY, originalCenter.z);
 
         // Refresh cached collider geometry
-        if (col != null)
-        {
-            cachedColRadius = col.radius;
-            cachedHalfHeight = Mathf.Max(col.height * 0.5f, col.radius);
-            cachedBottomOffset = cachedHalfHeight - col.radius;
-            cachedColCenterLocal = col.center;
-        }
+        RefreshCachedColliderGeometry();
 
         // Crouch changes base speed, then slow system applies on top.
         baseSpeedRuntime = Mathf.Lerp(moveSpeed, crouchSpeed, t);
@@ -931,8 +880,6 @@ public class Movement : MonoBehaviour
             ))
         {
             
-            Debug.Log($"Ground hit: {hit.collider.name} | Layer: {hit.collider.gameObject.layer} | PhysicMat: {(hit.collider.sharedMaterial ? hit.collider.sharedMaterial.name : "NULL")}");
-            
             lastGroundNormal = hit.normal;
             lastSlopeAngleDeg = Vector3.Angle(hit.normal, Vector3.up);
             isOnSteepSlope = lastSlopeAngleDeg > maxWalkableSlopeDegrees;
@@ -964,6 +911,12 @@ public class Movement : MonoBehaviour
     {
         if (col == null)
             col = GetComponent<CapsuleCollider>();
+        
+        RefreshCachedColliderGeometry();
+    }
+
+    private void RefreshCachedColliderGeometry()
+    {
 
         if (col == null)
             return;
@@ -1021,137 +974,4 @@ public class Movement : MonoBehaviour
 
         groundLayer = 1 << layerIndex;
     }
-
-    #region Ladder
-    private void OnTriggerEnter(Collider other)
-    {
-        SimpleLadder ladder = other.GetComponent<SimpleLadder>();
-        if (ladder == null)
-            return;
-
-        EnterLadder(ladder);
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        SimpleLadder ladder = other.GetComponent<SimpleLadder>();
-        if (ladder == null)
-            return;
-
-        if (ladder == currentLadder)
-            ExitLadder();
-    }
-
-    private void EnterLadder(SimpleLadder ladder)
-    {
-        if (rb == null)
-            return;
-
-        isOnLadder = true;
-        currentLadder = ladder;
-
-        ladderCachedUseGravity = rb.useGravity;
-        rb.useGravity = false;
-
-        ladderLockedZ = transform.position.z;
-
-        rb.linearVelocity = Vector3.zero;
-
-        SnapToLadder();
-
-        currentState = MovementState.Idle;
-    }
-
-    private void ExitLadder()
-    {
-        if (rb == null)
-            return;
-
-        isOnLadder = false;
-        currentLadder = null;
-
-        rb.useGravity = ladderCachedUseGravity;
-    }
-
-    private void SnapToLadder()
-    {
-        if (currentLadder == null)
-            return;
-
-        float snapOffset = ladderSnapOffsetOverride != 0f
-            ? ladderSnapOffsetOverride
-            : currentLadder.SnapOffsetX;
-
-        Vector3 p = transform.position;
-        p.x = currentLadder.transform.position.x + snapOffset;
-        p.z = ladderLockedZ;
-
-        transform.position = p;
-    }
-
-    private void HandleLadderMovement()
-    {
-        if (rb == null || currentLadder == null)
-            return;
-
-        float vInput = Input.GetAxis("Vertical");
-
-        Vector3 v = rb.linearVelocity;
-        v.x = 0f;
-        v.y = vInput * currentLadder.ClimbSpeed;
-        v.z = 0f;
-
-        rb.linearVelocity = v;
-
-        SnapToLadder();
-
-        currentState = Mathf.Abs(vInput) > 0.01f
-            ? MovementState.Walking
-            : MovementState.Idle;
-    }
-    #endregion
-    
-    /// <summary>
-    /// Debug gizmos to visualize collider and standing capsule
-    /// </summary>
-    #region Gizmos (Debug)
-    private void OnDrawGizmos()
-    {
-        CapsuleCollider c = GetComponent<CapsuleCollider>();
-        if (!c)
-            return;
-
-        Transform t = transform;
-        Vector3 up = t.up;
-
-        // ---------- Current collider (yellow) ----------
-        Gizmos.color = Color.yellow;
-
-        Vector3 currentCenter = t.TransformPoint(c.center);
-        float currentHalfHeight = Mathf.Max(c.height * 0.5f, c.radius);
-
-        Vector3 currentTop = currentCenter + up * (currentHalfHeight - c.radius);
-        Vector3 currentBottom = currentCenter - up * (currentHalfHeight - c.radius);
-
-        Gizmos.DrawWireSphere(currentTop, c.radius);
-        Gizmos.DrawWireSphere(currentBottom, c.radius);
-
-        // ---------- Standing clearance capsule (red) ----------
-        Gizmos.color = Color.red;
-
-        Vector3 standCenter = t.TransformPoint(originalCenter);
-        float standHalfHeight = Mathf.Max(originalHeight * 0.5f, c.radius);
-
-        Vector3 standTop = standCenter + up * (standHalfHeight - c.radius);
-        Vector3 standBottom = standCenter - up * (standHalfHeight - c.radius);
-
-        Gizmos.DrawWireSphere(standTop, c.radius);
-        Gizmos.DrawWireSphere(standBottom, c.radius);
-
-        Gizmos.DrawLine(standTop + t.right * c.radius, standBottom + t.right * c.radius);
-        Gizmos.DrawLine(standTop - t.right * c.radius, standBottom - t.right * c.radius);
-        Gizmos.DrawLine(standTop + t.forward * c.radius, standBottom + t.forward * c.radius);
-        Gizmos.DrawLine(standTop - t.forward * c.radius, standBottom - t.forward * c.radius);
-    }
-    #endregion
 }
