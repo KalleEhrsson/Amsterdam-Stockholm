@@ -55,10 +55,6 @@ MonoBehaviour:
   jumpForce: 5
   moveSpeedRuntime: 0
   externalSpeedMultiplier: 1
-  pushableLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  pushingDotThreshold: 0.35
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -75,28 +71,13 @@ MonoBehaviour:
   groundCastDistance: 0.08
   groundSphereRadiusMultiplier: 0.95
   groundBottomBias: 0.02
+  woodMaterial: {fileID: 0}
+  metalMaterial: {fileID: 0}
   visual: {fileID: 1538509038645631921}
   standUpDuration: 0.2
   crouchDownDuration: 0.2
   standSpeedHoldTime: 1
   crouchJumpMultiplier: 0.6
-  ladderClimbSpeed: 3.5
-  ladderSnapSpeed: 25
-  ladderRotateSpeed: 18
-  uprightRotateSpeed: 22
-  ladderSurfaceOffset: 0.1
-  detachOnHorizontalInput: 1
-  detachHorizontalThreshold: 0.6
-  ladderJumpOffHorizontalSpeed: 2.5
-  ladderStepOffAtTop: 1
-  ladderTopStepOffDistance: 0.12
-  ladderStepOffUpOffset: 0.08
-  ladderStepOffSideOffset: 0.35
-  ladderDebugLogs: 1
-  ladderDebugInterval: 0.25
-  ladderAttachGraceTime: 0.12
-  ladderExitGraceTime: 0.15
-  ladderSurfacePadding: 0.02
 --- !u!114 &6647444901157643374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,6 +233,7 @@ Animator:
   m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &5042742147090173598
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -297,6 +279,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -306,7 +289,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &2604181148610374397
 GameObject:
@@ -319,6 +301,7 @@ GameObject:
   - component: {fileID: 5721959028863185854}
   - component: {fileID: 2118244183297893839}
   - component: {fileID: 1278360559483998445}
+  - component: {fileID: 3850259271205782332}
   m_Layer: 0
   m_Name: AudioOneShots
   m_TagString: Untagged
@@ -451,27 +434,69 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneShotAudio
   entries:
-  - id: 0
+  - cue: 100
+    cueId: 
     clip: {fileID: 8300000, guid: d250d2fc54e751d4790abdc173e3e5a4, type: 3}
     volume: 1
     pitchMin: 1
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.37151927
-    cachedClipInstanceId: 48764
+    cachedClipInstanceId: 51200
     cachedWasSkipEnabled: 1
-  - id: 1
+  - cue: 100
+    cueId: 
     clip: {fileID: 8300000, guid: 779ad99896bb85e4e88b2102c6b90896, type: 3}
     volume: 1
     pitchMin: 1
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.042666666
-    cachedClipInstanceId: 48766
+    cachedClipInstanceId: 51202
+    cachedWasSkipEnabled: 1
+  - cue: 0
+    cueId: 
+    clip: {fileID: 8300000, guid: a4497a9d9f7e4aa4486c4cc01a9c6767, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    skipLeadingSilence: 1
+    cachedOffsetSeconds: 0.023219954
+    cachedClipInstanceId: 52196
+    cachedWasSkipEnabled: 1
+  - cue: 1
+    cueId: 
+    clip: {fileID: 8300000, guid: 38606c7767ca1074c8204e9092afada3, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    skipLeadingSilence: 1
+    cachedOffsetSeconds: 0.41795918
+    cachedClipInstanceId: 52284
     cachedWasSkipEnabled: 1
   poolSize: 4
+  defaultSpatialBlend: 0
+  logMissingCues: 0
   silenceThreshold: 0.01
   scanChunkSize: 1024
+--- !u!114 &3850259271205782332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2604181148610374397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8d8f7d5f910ecf449e48da73b281b2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RandomAudioPlayer
+  clips:
+  - {fileID: 0}
+  playOnStart: 1
+  loop: 1
+  minDelay: 1
+  maxDelay: 3
 --- !u!1 &3644904432702776188
 GameObject:
   m_ObjectHideFlags: 0
@@ -614,7 +639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b9235decd412624dab454aa8ca23419, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWalkAudio
-  movement: {fileID: 0}
+  movement: {fileID: 7485105038482232701}
   defaultLoop: {fileID: 8300000, guid: bef6a543811282a4c867008f6176b0bd, type: 3}
   defaultVolume: 1
   defaultPitchMin: 1
