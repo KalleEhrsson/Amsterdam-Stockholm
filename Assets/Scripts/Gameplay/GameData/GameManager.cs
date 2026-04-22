@@ -10,7 +10,6 @@ public class GameManager : MonoBehaviour
         public List<GameObject> items;
         public Text statusText;
         public Text valueText;
-        public GameObject statusUI;
         public int valueTarget;
 
         [HideInInspector] public List<bool> collected;
@@ -26,26 +25,32 @@ public class GameManager : MonoBehaviour
 
     private LevelData[] levels;
 
-    [Header("Train Barriers")]
+    [Header("Doors (MUST match level order)")]
+    [SerializeField] private GameObject[] levelDoors;
+
+    [Header("Train Barriers (optional)")]
     [SerializeField] private GameObject[] trainBarrierLevel;
 
     void Start()
     {
         levels = new LevelData[] { level1, level2, level3 };
 
+        // Init levels safely
         for (int i = 0; i < levels.Length; i++)
         {
-            if (levels[i].items == null) continue;
+            if (levels[i].items == null)
+            {
+                Debug.LogWarning($"Level {i + 1} has no items assigned!");
+                continue;
+            }
 
             levels[i].collected = new List<bool>(new bool[levels[i].items.Count]);
             levels[i].collectedCount = 0;
             levels[i].totalValue = 0;
             levels[i].completed = false;
-        }
 
-        if (trainBarrierLevel.Length > 0) trainBarrierLevel[0].SetActive(true);
-        if (trainBarrierLevel.Length > 1) trainBarrierLevel[1].SetActive(true);
-        if (trainBarrierLevel.Length > 2) trainBarrierLevel[2].SetActive(true);
+            UpdateLevelUI(levels[i], i);
+        }
     }
 
     // =========================
@@ -58,6 +63,7 @@ public class GameManager : MonoBehaviour
         LevelData level = levels[levelIndex];
 
         if (level.completed) return;
+
         if (level.collected == null || itemIndex >= level.collected.Count) return;
 
         if (!level.collected[itemIndex])
@@ -66,19 +72,21 @@ public class GameManager : MonoBehaviour
             level.collectedCount++;
             level.totalValue += value;
 
+            Debug.Log($"Collected item {itemIndex} in level {levelIndex + 1}");
+
             UpdateLevelUI(level, levelIndex);
         }
     }
 
     // =========================
-    // UI UPDATE
+    // LEVEL UPDATE + COMPLETION
     // =========================
     private void UpdateLevelUI(LevelData level, int index)
     {
         if (level.statusText != null)
         {
             level.statusText.text =
-                $"Level {index + 1}: {level.collectedCount}/{level.items.Count} (Value: {level.totalValue})";
+                $"Level {index + 1}: {level.collectedCount}/{level.items.Count}";
         }
 
         if (level.valueText != null)
@@ -87,25 +95,46 @@ public class GameManager : MonoBehaviour
         }
 
         bool valueOK = (level.valueTarget == 0 || level.totalValue >= level.valueTarget);
+        bool itemsOK = (level.collectedCount >= level.items.Count);
 
-        if (level.collectedCount >= level.items.Count && valueOK && !level.completed)
+        Debug.Log($"Level {index + 1} check → Items:{itemsOK} Value:{valueOK}");
+
+        if (!level.completed && itemsOK && valueOK)
         {
             level.completed = true;
 
+            Debug.Log($"LEVEL {index + 1} COMPLETED!");
+
+            // Disable text
             if (level.statusText != null)
-                level.statusText.text += " - Completed!";
+                level.statusText.enabled = false;
 
-            if (trainBarrierLevel.Length > index && trainBarrierLevel[index] != null)
-                trainBarrierLevel[index].SetActive(false);
+            if (level.valueText != null)
+                level.valueText.enabled = false;
 
-            // Activate next level UI
-            if (index + 1 < levels.Length)
+            // REMOVE DOOR (FORCE)
+            if (levelDoors != null && index < levelDoors.Length)
             {
-                if (levels[index].statusUI != null)
-                    levels[index].statusUI.SetActive(false);
+                if (levelDoors[index] != null)
+                {
+                    Debug.Log($"Disabling door: {levelDoors[index].name}");
+                    levelDoors[index].SetActive(false);
+                }
+                else
+                {
+                    Debug.LogWarning($"Door at index {index} is NULL");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("LevelDoors array not set or too small");
+            }
 
-                if (levels[index + 1].statusUI != null)
-                    levels[index + 1].statusUI.SetActive(true);
+            // OPTIONAL barrier removal
+            if (trainBarrierLevel != null && index < trainBarrierLevel.Length)
+            {
+                if (trainBarrierLevel[index] != null)
+                    trainBarrierLevel[index].SetActive(false);
             }
         }
     }
