@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 public class HoldRestartController : MonoBehaviour
 {
@@ -64,7 +67,7 @@ public class HoldRestartController : MonoBehaviour
             return;
         }
 
-        bool isHoldingRestart = Input.GetKey(KeyCode.R);
+        bool isHoldingRestart = IsRestartHeld();
 
         if (isHoldingRestart)
         {
@@ -73,7 +76,7 @@ public class HoldRestartController : MonoBehaviour
         }
         else
         {
-            if (Input.GetKeyUp(KeyCode.R))
+            if (IsRestartReleasedThisFrame())
             {
                 targetAlpha = 0f;
             }
@@ -110,7 +113,7 @@ public class HoldRestartController : MonoBehaviour
 
     private void EnsureUi()
     {
-        canvas = FindCanvas();
+        canvas = FindOrCreateCanvas();
 
         Transform backgroundTransform = canvas.transform.Find(BackgroundName);
         if (backgroundTransform == null)
@@ -147,20 +150,59 @@ public class HoldRestartController : MonoBehaviour
         }
     }
 
-    private Canvas FindCanvas()
+    private Canvas FindOrCreateCanvas()
     {
-        Canvas existingCanvas = FindAnyObjectByType<Canvas>();
+        if (canvas != null)
+        {
+            return canvas;
+        }
+
+        GameObject existingCanvasObject = GameObject.Find(CanvasName);
+        Canvas existingCanvas = existingCanvasObject != null ? existingCanvasObject.GetComponent<Canvas>() : null;
         if (existingCanvas != null)
         {
+            existingCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            existingCanvas.sortingOrder = short.MaxValue;
+            DontDestroyOnLoad(existingCanvas.gameObject);
             return existingCanvas;
         }
 
         GameObject canvasObject = new(CanvasName);
         Canvas createdCanvas = canvasObject.AddComponent<Canvas>();
         createdCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        createdCanvas.sortingOrder = short.MaxValue;
         canvasObject.AddComponent<CanvasScaler>();
         canvasObject.AddComponent<GraphicRaycaster>();
+        DontDestroyOnLoad(canvasObject);
         return createdCanvas;
+    }
+    
+    private static bool IsRestartHeld()
+    {
+        bool held = Input.GetKey(KeyCode.R);
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            held |= Keyboard.current.rKey.isPressed;
+        }
+#endif
+
+        return held;
+    }
+
+    private static bool IsRestartReleasedThisFrame()
+    {
+        bool released = Input.GetKeyUp(KeyCode.R);
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            released |= Keyboard.current.rKey.wasReleasedThisFrame;
+        }
+#endif
+
+        return released;
     }
 
     private Transform CreateBackground(Transform parent)
