@@ -6,6 +6,7 @@ public class ItemDropInCarage : MonoBehaviour
     public GameObject DroppableItem;
     public GameObject itemcol;
     public GameManager gamemanager;
+    public Canvas canvas;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -28,6 +29,10 @@ public class ItemDropInCarage : MonoBehaviour
                 Debug.LogWarning("ItemDropInCarage: DroppableItem is null when trying to destroy.");
             }
         }
+        else
+        {
+            canvas.enabled = true;
+        }    
     }
     void Start()
     {
