@@ -907,11 +907,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 242637652}
   m_CullTransparentMesh: 1
---- !u!4 &321550530 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2274803632876034918, guid: 088d33248e2de4a4cb8302894b7194ec, type: 3}
-  m_PrefabInstance: {fileID: 705934015}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1062,10 +1057,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea0cf8d09ae075b4da5a31c3d6b5b600, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraTrainMovement
-  cameraPosition: {fileID: 330585546}
-  playerPosition: {fileID: 321550530}
+  cameraposistion: {fileID: 0}
+  trainposistion: {fileID: 0}
   cameraSpeed: 0.4
-  mouseSmoothing: 0
+  mousesmoothing: 0
   maxHorizontalAngle: 7
   maxVerticalAngle: 7
 --- !u!1 &417369008
