@@ -81,7 +81,7 @@ public class Movement : MonoBehaviour
     [SerializeField] private float groundStickForce = 5f;
     
     [Tooltip("Maximum slope angle (in degrees) the player can 'walk' on. Slopes steeper than this will cause sliding.")]
-    [SerializeField] private float maxWalkableSlopeDegrees = 50f;
+    [SerializeField] private float maxWalkableSlopeDegrees = 60f;
 
     [Tooltip("Acceleration applied down the slope when standing on a slope steeper than maxWalkableSlopeDegrees.")]
     [SerializeField] private float slopeSlideAcceleration = 9f;

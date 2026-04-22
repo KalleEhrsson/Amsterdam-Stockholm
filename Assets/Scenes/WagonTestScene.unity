@@ -229,6 +229,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &155779666
 MeshFilter:
@@ -907,11 +908,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 242637652}
   m_CullTransparentMesh: 1
---- !u!4 &321550530 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2274803632876034918, guid: 088d33248e2de4a4cb8302894b7194ec, type: 3}
-  m_PrefabInstance: {fileID: 705934015}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1062,10 +1058,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea0cf8d09ae075b4da5a31c3d6b5b600, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraTrainMovement
-  cameraPosition: {fileID: 330585546}
-  playerPosition: {fileID: 321550530}
+  cameraposistion: {fileID: 0}
+  trainposistion: {fileID: 0}
   cameraSpeed: 0.4
-  mouseSmoothing: 0
+  mousesmoothing: 0
   maxHorizontalAngle: 7
   maxVerticalAngle: 7
 --- !u!1 &417369008
@@ -1086,7 +1082,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &417369009
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1156,6 +1152,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &417369011
 MeshFilter:
@@ -1331,6 +1328,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &452940054
 MeshFilter:
@@ -2772,14 +2770,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 894497116}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 0
     m_Resolution: -1
@@ -3046,6 +3044,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1358179812
 MeshFilter:
@@ -3548,6 +3547,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1724949769
 MeshFilter:
@@ -3701,6 +3701,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1791342375
 MeshFilter:
@@ -3835,6 +3836,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1852426911
 MeshFilter:
