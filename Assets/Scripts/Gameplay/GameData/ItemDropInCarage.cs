@@ -1,72 +1,60 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class ItemDropInCarage : MonoBehaviour
 {
-    [Header("References")]
-    public GameManager gameManager;
+    public GameObject DroppableItem;
+    public GameObject itemcol;
+    public GameManager gamemanager;
     public Canvas canvas;
 
-    [Header("Item Settings")]
-    public int levelIndex = 1;
-    public int itemIndex;
-
-    private bool hasTriggered = false;
-
-    // =========================
-    // TRIGGER ONLY (cleaner)
-    // =========================
     private void OnTriggerEnter(Collider other)
     {
-        HandleDrop(other.gameObject);
-    }
-
-    private void HandleDrop(GameObject other)
-    {
-        if (hasTriggered) return;
-        if (other == null) return;
-
-        if (!other.CompareTag("Room2Ground")) return;
-
-        hasTriggered = true;
-
-        if (canvas != null)
-            canvas.enabled = true;
-
-        Debug.Log($"Drop detected on {name}");
-
-        // Get ItemData from the ACTUAL object that hit the ground
-        ItemData itemData = GetComponent<ItemData>();
-        if (itemData == null)
-            itemData = GetComponentInChildren<ItemData>();
-
-        int value = itemData != null ? itemData.value : 0;
-
-        Debug.Log($"Item value = {value}");
-
-        // Send to GameManager
-        if (gameManager != null)
+        if (other.CompareTag("Room2Ground"))
         {
-            gameManager.CollectItem(levelIndex, itemIndex, value);
+            if (gamemanager != null)
+            {
+                gamemanager.itemdropped_in_correct_room();
+            }
+            else
+            {
+                Debug.LogWarning("ItemDropInCarage: GameManager reference is null when item dropped.");
+            }
+            if (DroppableItem != null)
+            {
+                Destroy(DroppableItem);
+            }
+            else
+            {
+                Debug.LogWarning("ItemDropInCarage: DroppableItem is null when trying to destroy.");
+            }
         }
         else
         {
-            Debug.LogWarning("GameManager not assigned!");
-        }
-
-        // Destroy THIS object safely
-        Destroy(gameObject);
+            canvas.enabled = true;
+        }    
     }
-
     void Start()
     {
-        if (gameManager == null)
+        // If gamemanager set in inspector, keep it. Otherwise try several safe lookups.
+        if (gamemanager == null)
         {
-            gameManager = FindObjectOfType<GameManager>();
+            GameObject gmObj = GameObject.Find("GameManager");
+            if (gmObj != null)
+            {
+                gamemanager = gmObj.GetComponent<GameManager>();
+            }
         }
 
-        if (gameManager == null)
+        if (gamemanager == null)
         {
-            Debug.LogError("No GameManager found in scene!", this);
+            // Try finding any GameManager in the scene
+            gamemanager = FindObjectOfType<GameManager>();
+        }
+
+        if (gamemanager == null)
+        {
+            Debug.LogError("ItemDropInCarage: Could not find a GameManager in the scene. Please assign it in the inspector or name the object 'GameManager'.", this);
         }
     }
 }
