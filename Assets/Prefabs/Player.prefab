@@ -159,7 +159,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: a72cc2abaae986b408216c4c65d1581a, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.1
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -540,7 +540,7 @@ MonoBehaviour:
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.37151927
-    cachedClipInstanceId: 51200
+    cachedClipInstanceId: 47706
     cachedWasSkipEnabled: 1
   - cue: 100
     cueId: 
@@ -550,7 +550,7 @@ MonoBehaviour:
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.042666666
-    cachedClipInstanceId: 51202
+    cachedClipInstanceId: 47708
     cachedWasSkipEnabled: 1
   - cue: 0
     cueId: 
@@ -560,7 +560,7 @@ MonoBehaviour:
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.023219954
-    cachedClipInstanceId: 52196
+    cachedClipInstanceId: 47710
     cachedWasSkipEnabled: 1
   - cue: 1
     cueId: 
@@ -570,7 +570,7 @@ MonoBehaviour:
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.41795918
-    cachedClipInstanceId: 52284
+    cachedClipInstanceId: 47712
     cachedWasSkipEnabled: 1
   poolSize: 4
   defaultSpatialBlend: 0
@@ -591,10 +591,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RandomAudioPlayer
   clips:
   - {fileID: 8300000, guid: fce3f307580bf454fa103e9ade18b32b, type: 3}
-  playOnStart: 1
+  playOnStart: 0
   loop: 1
-  minDelay: 1
-  maxDelay: 3
+  minDelay: 30
+  maxDelay: 90
 --- !u!1 &3644904432702776188
 GameObject:
   m_ObjectHideFlags: 0
