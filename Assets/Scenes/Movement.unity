@@ -151,14 +151,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b10eae4fb121b044a43742ac707f1fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Ladder
-  editorPrevRequireUpInputToAttach: 0
-  editorPrevIsTrigger: 0
-  autoAttachOnEnter: 1
-  requireUpInputToAttach: 0
-  snapPoint: {fileID: 0}
-  frontAttachDotThreshold: 0.2
-  ladderDebugGizmos: 1
-  ladderDebugGizmoSurfaceOffset: 0.1
+  climbSpeed: 4.5
+  invertSnapSide: 0
+  snapForwardOffset: 1
+  snapOverride: {fileID: 0}
+  topMarker: {fileID: 0}
+  bottomMarker: {fileID: 0}
 --- !u!65 &29204157
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -174,7 +172,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -227,6 +225,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &29204159
 MeshFilter:
@@ -244,13 +243,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 29204155}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.0861125, w: 0.99628544}
-  m_LocalPosition: {x: -7.65, y: 2.73, z: 0}
-  m_LocalScale: {x: 1, y: 5.2709413, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.13052616, w: 0.9914449}
+  m_LocalPosition: {x: -5.25, y: 3.2, z: 0}
+  m_LocalScale: {x: 0.2, y: 5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 9.88}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 15}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -538,6 +537,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &390642674
 MeshFilter:
@@ -556,7 +556,7 @@ Transform:
   m_GameObject: {fileID: 390642670}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.91, y: 1.9845, z: 0}
+  m_LocalPosition: {x: 1.54, y: 1.37, z: 0}
   m_LocalScale: {x: 1, y: 2.329, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -649,6 +649,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &496504962
 MeshFilter:
@@ -814,6 +815,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &896801571
 MeshFilter:
@@ -925,6 +927,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1044969602
 MeshFilter:
@@ -1036,6 +1039,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1323115602
 MeshFilter:
@@ -1162,6 +1166,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1879541061
 MeshFilter:
@@ -1209,7 +1214,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4533701986332213310, guid: 088d33248e2de4a4cb8302894b7194ec, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -2.21
       objectReference: {fileID: 0}
     - target: {fileID: 4533701986332213310, guid: 088d33248e2de4a4cb8302894b7194ec, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1252,6 +1257,10 @@ PrefabInstance:
       value: 56
       objectReference: {fileID: 0}
     - target: {fileID: 4808032043118255376, guid: 088d33248e2de4a4cb8302894b7194ec, type: 3}
+      propertyPath: movement
+      value: 
+      objectReference: {fileID: 712484876}
+    - target: {fileID: 6647444901157643374, guid: 088d33248e2de4a4cb8302894b7194ec, type: 3}
       propertyPath: movement
       value: 
       objectReference: {fileID: 712484876}
