@@ -1,7 +1,5 @@
-using NUnit.Framework;
 using UnityEngine;
 using System.Collections.Generic;
-using NUnit.Framework.Constraints;
 
 public class ClickableObject : MonoBehaviour
 {
@@ -12,28 +10,42 @@ public class ClickableObject : MonoBehaviour
     [SerializeField] private List<Material> materials;
     [SerializeField] private List<Material> clickableMaterials;
 
-
     [SerializeField] private int itemID;
     [SerializeField] private int itemLevel;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        meshR = gameObject.GetComponent<MeshRenderer>();
+        meshR = GetComponent<MeshRenderer>();
+
+        if (gameManager == null)
+        {
+            gameManager = FindObjectOfType<GameManager>();
+        }
     }
+
     private void OnMouseEnter()
     {
-        meshR.SetMaterials(clickableMaterials);
+        if (meshR != null)
+            meshR.SetMaterials(clickableMaterials);
     }
 
     private void OnMouseExit()
     {
-        meshR.SetMaterials(materials);
+        if (meshR != null)
+            meshR.SetMaterials(materials);
     }
 
     private void OnMouseDown()
     {
-        gameManager.CollectItem(itemLevel, itemID);
-        Destroy(this.gameObject);
+        if (gameManager != null)
+        {
+            gameManager.CollectItem(itemLevel, itemID);
+        }
+        else
+        {
+            Debug.LogWarning("GameManager not assigned!");
+        }
+
+        Destroy(gameObject);
     }
 }

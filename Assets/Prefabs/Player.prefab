@@ -29,8 +29,8 @@ Transform:
   m_GameObject: {fileID: 446550760275175696}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.138, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 1.6907, z: 0}
+  m_LocalScale: {x: 1.6049, y: 2.1055, z: 1.4609}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4088639936106523424}
@@ -55,6 +55,10 @@ MonoBehaviour:
   jumpForce: 5
   moveSpeedRuntime: 0
   externalSpeedMultiplier: 1
+  pushableLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  pushingDotThreshold: 0.35
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -78,10 +82,21 @@ MonoBehaviour:
   crouchJumpMultiplier: 0.6
   ladderClimbSpeed: 3.5
   ladderSnapSpeed: 25
+  ladderRotateSpeed: 18
+  uprightRotateSpeed: 22
+  ladderSurfaceOffset: 0.1
   detachOnHorizontalInput: 1
   detachHorizontalThreshold: 0.6
   ladderJumpOffHorizontalSpeed: 2.5
-  isGrounded: 0
+  ladderStepOffAtTop: 1
+  ladderTopStepOffDistance: 0.12
+  ladderStepOffUpOffset: 0.08
+  ladderStepOffSideOffset: 0.35
+  ladderDebugLogs: 1
+  ladderDebugInterval: 0.25
+  ladderAttachGraceTime: 0.12
+  ladderExitGraceTime: 0.15
+  ladderSurfacePadding: 0.02
 --- !u!114 &6647444901157643374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -105,6 +120,7 @@ MonoBehaviour:
   landTrigger: Land
   moveXParam: MoveX
   idleXParam: IdleX
+  pushingParam: IsPushing
 --- !u!114 &4808032043118255376
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -442,7 +458,7 @@ MonoBehaviour:
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.37151927
-    cachedClipInstanceId: 47556
+    cachedClipInstanceId: 48764
     cachedWasSkipEnabled: 1
   - id: 1
     clip: {fileID: 8300000, guid: 779ad99896bb85e4e88b2102c6b90896, type: 3}
@@ -451,7 +467,7 @@ MonoBehaviour:
     pitchMax: 1
     skipLeadingSilence: 1
     cachedOffsetSeconds: 0.042666666
-    cachedClipInstanceId: 47558
+    cachedClipInstanceId: 48766
     cachedWasSkipEnabled: 1
   poolSize: 4
   silenceThreshold: 0.01
