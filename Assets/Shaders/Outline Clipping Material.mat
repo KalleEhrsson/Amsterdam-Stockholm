@@ -51,7 +51,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _ClipDistance: 13
+    - _ClipDistance: 22
     - _FadeDistance: 75
     - _FadeRange: 1
     - _OutlineThickness: 0.01
