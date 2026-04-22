@@ -26,6 +26,7 @@ public class HoldRestartController : MonoBehaviour
     private Canvas canvas;
     private Image backgroundImage;
     private Image fillImage;
+    private RectTransform fillRectTransform;
     private CanvasGroup barCanvasGroup;
     #endregion
 
@@ -87,7 +88,7 @@ public class HoldRestartController : MonoBehaviour
         currentHoldTime = Mathf.Clamp(currentHoldTime, 0f, holdDuration);
 
         float progress = holdDuration <= 0f ? 1f : currentHoldTime / holdDuration;
-        fillImage.fillAmount = Mathf.Clamp01(progress);
+        SetFillVisual(Mathf.Clamp01(progress));
 
         currentAlpha = Mathf.MoveTowards(currentAlpha, targetAlpha, fadeSpeed * Time.deltaTime);
         barCanvasGroup.alpha = Mathf.Clamp01(currentAlpha);
@@ -107,7 +108,7 @@ public class HoldRestartController : MonoBehaviour
         isRestarting = false;
         targetAlpha = 0f;
         currentAlpha = 0f;
-        fillImage.fillAmount = 0f;
+        SetFillVisual(0f);
         barCanvasGroup.alpha = 0f;
     }
 
@@ -141,6 +142,8 @@ public class HoldRestartController : MonoBehaviour
             fillImage = fillTransform.gameObject.AddComponent<Image>();
         }
 
+        fillRectTransform = fillTransform as RectTransform;
+        ConfigureFillRect(fillRectTransform);
         ConfigureFillImage(fillImage);
 
         barCanvasGroup = backgroundTransform.GetComponent<CanvasGroup>();
@@ -241,16 +244,38 @@ public class HoldRestartController : MonoBehaviour
         image.color = new Color(0f, 0f, 0f, 0.55f);
         image.raycastTarget = false;
     }
+    
+    private static void ConfigureFillRect(RectTransform rect)
+    {
+        if (rect == null)
+        {
+            return;
+        }
+
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.pivot = new Vector2(0f, 0.5f);
+        rect.offsetMin = new Vector2(2f, 2f);
+        rect.offsetMax = new Vector2(-2f, -2f);
+        rect.localScale = new Vector3(0f, 1f, 1f);
+    }
 
     private static void ConfigureFillImage(Image image)
     {
         image.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-        image.type = Image.Type.Filled;
-        image.fillMethod = Image.FillMethod.Horizontal;
-        image.fillOrigin = (int)Image.OriginHorizontal.Left;
-        image.fillAmount = 0f;
+        image.type = Image.Type.Simple;
         image.color = new Color(0.25f, 0.95f, 0.45f, 0.95f);
         image.raycastTarget = false;
+    }
+    
+    private void SetFillVisual(float progress)
+    {
+        if (fillRectTransform == null)
+        {
+            return;
+        }
+
+        fillRectTransform.localScale = new Vector3(progress, 1f, 1f);
     }
     #endregion
 
