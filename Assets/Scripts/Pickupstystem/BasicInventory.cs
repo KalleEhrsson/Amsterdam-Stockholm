@@ -3,6 +3,9 @@ using UnityEngine;
 
 public class BasicInventory : MonoBehaviour
 {
+    public delegate void InventoryAudioCueEvent(string gameplayEvent, AudioCueType cue, GameObject sourceObject, bool blockedAsDuplicate);
+    public event InventoryAudioCueEvent OnInventoryAudioCue;
+
     [System.Serializable]
     public class InventoryItem
     {
@@ -30,10 +33,15 @@ public class BasicInventory : MonoBehaviour
 
     [Tooltip("If true the item will be removed from the inventory when dropped. If false the item stays in the list so it can be picked up again.")]
     public bool removeItemOnDrop = false;
+
+    [Header("Audio Debug")]
+    [SerializeField] private bool enableAudioCueDebugLogs = false;
     
     public bool IsHoldingItem => items.Count > 0;
     public ClickablePickup CurrentPickupCandidate => ClickablePickup.CurrentHovered;
     public bool HasPickupCandidate => CurrentPickupCandidate != null && CurrentPickupCandidate.HasItemData;
+
+    private readonly HashSet<int> consumedPickupObjects = new HashSet<int>();
 
     // Check input for dropping
     private void Update()
@@ -49,8 +57,19 @@ public class BasicInventory : MonoBehaviour
     {
         if (pickable == null) return false;
 
+        int pickableId = pickable.GetInstanceID();
+        if (!consumedPickupObjects.Add(pickableId))
+        {
+            RaiseAudioCueEvent("pickup_confirmed", AudioCueType.Pickup, pickable, true);
+            return false;
+        }
+
         ItemData data = pickable.GetComponent<ItemData>();
-        if (data == null) return false;
+        if (data == null)
+        {
+            consumedPickupObjects.Remove(pickableId);
+            return false;
+        }
 
         InventoryItem it = new InventoryItem();
         it.itemName = data.itemName;
@@ -60,9 +79,14 @@ public class BasicInventory : MonoBehaviour
 
         items.Add(it);
 
+        PlaceableItem placeable = pickable.GetComponent<PlaceableItem>();
+        if (placeable != null)
+            placeable.OnPickedUp();
+
         // remove from scene after pickup
         Destroy(pickable);
 
+        RaiseAudioCueEvent("pickup_confirmed", AudioCueType.Pickup, pickable, false);
         Debug.Log($"Picked up: {it.itemName} (value {it.value})");
         return true;
     }
@@ -120,6 +144,16 @@ public class BasicInventory : MonoBehaviour
             {
                 rb.AddForce(forward.normalized * 1.5f + Vector3.up * 0.5f, ForceMode.Impulse);
             }
+
+            PlaceableItem placeable = go.GetComponent<PlaceableItem>();
+            if (placeable != null)
+                placeable.OnDropped();
+
+            RaiseAudioCueEvent("drop_confirmed", AudioCueType.Drop, go, false);
+        }
+        else
+        {
+            RaiseAudioCueEvent("drop_confirmed", AudioCueType.Drop, gameObject, true);
         }
 
         Debug.Log($"Dropped: {it.itemName} (value {it.value})");
@@ -147,5 +181,18 @@ public class BasicInventory : MonoBehaviour
             PickUp(other.gameObject);
         }
     }
-}
 
+    private void RaiseAudioCueEvent(string gameplayEvent, AudioCueType cue, GameObject sourceObject, bool blockedAsDuplicate)
+    {
+        OnInventoryAudioCue?.Invoke(gameplayEvent, cue, sourceObject, blockedAsDuplicate);
+
+        if (!blockedAsDuplicate)
+            OneShotAudioBridge.Play(cue);
+
+        if (!enableAudioCueDebugLogs)
+            return;
+
+        string objectName = sourceObject != null ? sourceObject.name : name;
+        Debug.Log($"[InventoryAudio] event={gameplayEvent} cue={cue} object={objectName} blockedDuplicate={blockedAsDuplicate}", this);
+    }
+}

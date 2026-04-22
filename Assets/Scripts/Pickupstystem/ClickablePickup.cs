@@ -10,6 +10,7 @@ public class ClickablePickup : MonoBehaviour, IPointerClickHandler
     
     [Tooltip("Optional reference to the player inventory. If null, will search for one at Start().")]
     public BasicInventory inventory;
+    private bool pickupRequestConsumed;
 
     #region Unity Lifecycle
     
@@ -40,6 +41,8 @@ public class ClickablePickup : MonoBehaviour, IPointerClickHandler
         {
             CurrentHovered = null;
         }
+
+        pickupRequestConsumed = false;
     }
 
     #endregion
@@ -60,16 +63,28 @@ public class ClickablePickup : MonoBehaviour, IPointerClickHandler
 
     private void TryPickup()
     {
+        if (pickupRequestConsumed)
+            return;
+
         if (inventory == null)
         {
             Debug.LogWarning("ClickablePickup: No BasicInventory found to pick up item.");
             return;
         }
 
+        pickupRequestConsumed = true;
+
+        Collider ownCollider = GetComponent<Collider>();
+        if (ownCollider != null)
+            ownCollider.enabled = false;
+
         // Use the same PickUp method so game logic stays consistent
         bool ok = inventory.PickUp(gameObject);
         if (!ok)
         {
+            pickupRequestConsumed = false;
+            if (ownCollider != null)
+                ownCollider.enabled = true;
             Debug.LogWarning($"ClickablePickup: Pickup failed for {gameObject.name}. Ensure ItemData is attached.");
         }
         

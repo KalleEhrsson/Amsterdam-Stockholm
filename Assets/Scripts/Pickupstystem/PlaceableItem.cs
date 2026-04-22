@@ -17,10 +17,12 @@ public class PlaceableItem : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = true;
     [SerializeField] private bool drawDebugRay = true;
+    [SerializeField] private bool enableAudioCueDebugLogs = false;
 
     [Header("Runtime")]
     [SerializeField] private bool isCorrectlyPlaced;
     [SerializeField] private bool hasBeenCounted;
+    [SerializeField] private bool hasPlayedPlacedConfirm;
 
     private bool isHeld;
     private Coroutine validationRoutine;
@@ -74,6 +76,7 @@ public class PlaceableItem : MonoBehaviour
             isCorrectlyPlaced = false;
             hasBeenCounted = false;
             PlacementManager.Instance?.SetPlacementState(this, false);
+            hasPlayedPlacedConfirm = false;
         }
     }
 
@@ -130,6 +133,12 @@ public class PlaceableItem : MonoBehaviour
                 hasBeenCounted = true;
                 isCorrectlyPlaced = true;
                 PlacementManager.Instance?.SetPlacementState(this, true);
+                RequestPlacementCue("placement_validated", AudioCueType.Confirm, false);
+                hasPlayedPlacedConfirm = true;
+            }
+            else
+            {
+                RequestPlacementCue("placement_validated", AudioCueType.Confirm, true);
             }
         }
         else
@@ -139,6 +148,9 @@ public class PlaceableItem : MonoBehaviour
                 hasBeenCounted = false;
                 isCorrectlyPlaced = false;
                 PlacementManager.Instance?.SetPlacementState(this, false);
+                if (hasPlayedPlacedConfirm)
+                    RequestPlacementCue("placement_invalidated", AudioCueType.Denied, false);
+                hasPlayedPlacedConfirm = false;
             }
         }
 
@@ -196,6 +208,17 @@ public class PlaceableItem : MonoBehaviour
     {
         if (!enableDebugLogs) return;
         Debug.Log($"[Placement] {message}", this);
+    }
+
+    private void RequestPlacementCue(string gameplayEvent, AudioCueType cue, bool blockedAsDuplicate)
+    {
+        if (!blockedAsDuplicate)
+            OneShotAudioBridge.Play(cue);
+
+        if (!enableAudioCueDebugLogs)
+            return;
+
+        Debug.Log($"[PlacementAudio] event={gameplayEvent} cue={cue} object={name} blockedDuplicate={blockedAsDuplicate}", this);
     }
 
     #endregion
