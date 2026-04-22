@@ -1,120 +1,143 @@
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
+[System.Serializable]
+
+
 public class GameManager : MonoBehaviour
 {
-    [System.Serializable]
-    public class LevelData
-    {
-        public List<GameObject> items;
-        public Text statusText;
-        public Text valueText;
-        public GameObject statusUI;
-        public int valueTarget;
+    [Header("Level 1 items")]
 
-        [HideInInspector] public List<bool> collected;
-        [HideInInspector] public int collectedCount;
-        [HideInInspector] public int totalValue;
-        [HideInInspector] public bool completed;
-    }
+    [SerializeField] private List<GameObject> level1Items;
+    [SerializeField] private List<bool> level1ItemsCollected;
+    [SerializeField] private Text level1StatusText;
+    [SerializeField] private GameObject level1statustestobj;
+    private int level1TotalItems;
+    private int level1CollectedCount;
+    private bool level1Completed;
 
-    [Header("Levels")]
-    [SerializeField] private LevelData level1;
-    [SerializeField] private LevelData level2;
-    [SerializeField] private LevelData level3;
+    [Header("Level 2 items")]
+    [SerializeField] private List<GameObject> level2Items;
+    [SerializeField] private List<bool> level2ItemsCollected;
+    [SerializeField] private Text level2StatusText;
+    [SerializeField] private GameObject level2statustestobj;
+    private int level2TotalItems;
+    private int level2CollectedCount;
+    private bool level2Completed;
 
-    private LevelData[] levels;
+    [Header("Level 3 items")]
+    [SerializeField] private List<GameObject> level3Items;
+    [SerializeField] private List<bool> level3ItemsCollected;
+    [SerializeField] private Text level3StatusText;
+    [SerializeField] private GameObject level3statustestobj;
+    private int level3TotalItems;
+    private int level3CollectedCount;
+    private bool level3Completed;
 
-    [Header("Train Barriers")]
+    [Header("TrainBariers")]
     [SerializeField] private GameObject[] trainBarrierLevel;
-    
-    [Header("Room Drop Tracking")]
-    [SerializeField] private int correctRoomDropCount;
 
     void Start()
     {
-        levels = new LevelData[] { level1, level2, level3 };
+        // Initialize Level 1
+        level1TotalItems = level1Items.Count;
+        level1ItemsCollected = new List<bool>(new bool[level1TotalItems]);
+        level1CollectedCount = 0;
+        level1Completed = false;
+        trainBarrierLevel[0].SetActive(true);
+        level1statustestobj.SetActive(true);
+        UpdateLevel1Status();
 
-        for (int i = 0; i < levels.Length; i++)
-        {
-            if (levels[i].items == null) continue;
+        // Initialize Level 2
+        level2TotalItems = level2Items.Count;
+        level2ItemsCollected = new List<bool>(new bool[level2TotalItems]);
+        level2CollectedCount = 0;
+        level2Completed = false;
+        trainBarrierLevel[1].SetActive(true);
+        level2statustestobj.SetActive(false);
+        UpdateLevel2Status();
 
-            levels[i].collected = new List<bool>(new bool[levels[i].items.Count]);
-            levels[i].collectedCount = 0;
-            levels[i].totalValue = 0;
-            levels[i].completed = false;
-        }
-
-        if (trainBarrierLevel.Length > 0) trainBarrierLevel[0].SetActive(true);
-        if (trainBarrierLevel.Length > 1) trainBarrierLevel[1].SetActive(true);
-        if (trainBarrierLevel.Length > 2) trainBarrierLevel[2].SetActive(true);
+        // Initialize Level 3
+        level3TotalItems = level3Items.Count;
+        level3ItemsCollected = new List<bool>(new bool[level3TotalItems]);
+        level3CollectedCount = 0;
+        level3Completed = false;
+        trainBarrierLevel[2].SetActive(true);
+        level3statustestobj.SetActive(false);
+        UpdateLevel3Status();
     }
 
-    // =========================
-    // MAIN COLLECT FUNCTION
-    // =========================
-    public void CollectItem(int levelIndex, int itemIndex, int value = 0)
-    {
-        if (levelIndex < 0 || levelIndex >= levels.Length) return;
-
-        LevelData level = levels[levelIndex];
-
-        if (level.completed) return;
-        if (level.collected == null || itemIndex >= level.collected.Count) return;
-
-        if (!level.collected[itemIndex])
-        {
-            level.collected[itemIndex] = true;
-            level.collectedCount++;
-            level.totalValue += value;
-
-            UpdateLevelUI(level, levelIndex);
-        }
-    }
-
-    // =========================
-    // UI UPDATE
-    // =========================
     public void itemdropped_in_correct_room()
     {
-        correctRoomDropCount++;
+        level2CollectedCount++;
     }
-    
-    private void UpdateLevelUI(LevelData level, int index)
+    public void CollectItem(int level, int itemIndex)
     {
-        if (level.statusText != null)
+        switch (level)
         {
-            level.statusText.text =
-                $"Level {index + 1}: {level.collectedCount}/{level.items.Count} (Value: {level.totalValue})";
-        }
-
-        if (level.valueText != null)
-        {
-            level.valueText.text = $"Value: {level.totalValue}";
-        }
-
-        bool valueOK = (level.valueTarget == 0 || level.totalValue >= level.valueTarget);
-
-        if (level.collectedCount >= level.items.Count && valueOK && !level.completed)
-        {
-            level.completed = true;
-
-            if (level.statusText != null)
-                level.statusText.text += " - Completed!";
-
-            if (trainBarrierLevel.Length > index && trainBarrierLevel[index] != null)
-                trainBarrierLevel[index].SetActive(false);
-
-            // Activate next level UI
-            if (index + 1 < levels.Length)
-            {
-                if (levels[index].statusUI != null)
-                    levels[index].statusUI.SetActive(false);
-
-                if (levels[index + 1].statusUI != null)
-                    levels[index + 1].statusUI.SetActive(true);
-            }
+            case 1:
+                if (!level1ItemsCollected[itemIndex])
+                {
+                    level1ItemsCollected[itemIndex] = true;
+                    level1CollectedCount++;
+                    UpdateLevel1Status();
+                }
+                break;
+            case 2:
+                if (!level2ItemsCollected[itemIndex])
+                {
+                    level2ItemsCollected[itemIndex] = true;
+                    level2CollectedCount++;
+                    UpdateLevel2Status();
+                }
+                break;
+            case 3:
+                if (!level3ItemsCollected[itemIndex])
+                {
+                    level3ItemsCollected[itemIndex] = true;
+                    level3CollectedCount++;
+                    UpdateLevel3Status();
+                }
+                break;
         }
     }
+    private void UpdateLevel1Status()
+    {
+        level1StatusText.text = $"Level 1 Items Collected: {level1CollectedCount}/{level1TotalItems}";
+        if (level1CollectedCount >= level1TotalItems && !level1Completed)
+        {
+            level1Completed = true;
+            level1StatusText.text += " - Level 1 Completed!";
+            trainBarrierLevel[0].SetActive(false);
+            level1statustestobj.SetActive(false);
+            level2statustestobj.SetActive(true);
+        }
+    }
+    private void UpdateLevel2Status()
+    {
+        level2StatusText.text = $"Level 2 Items Collected: {level2CollectedCount}/{level2TotalItems}";
+        if (level2CollectedCount >= level2TotalItems && !level2Completed)
+        {
+            level2Completed = true;
+            level2StatusText.text += " - Level 2 Completed!";
+            trainBarrierLevel[1].SetActive(false);
+            level2statustestobj.SetActive(false);
+            level3statustestobj.SetActive(true);
+        }
+    }
+    private void UpdateLevel3Status()
+    {
+        level3StatusText.text = $"Level 3 Items Collected: {level3CollectedCount}/{level3TotalItems}";
+        if (level3CollectedCount >= level3TotalItems && !level3Completed)
+        {
+            level3Completed = true;
+            level3StatusText.text = "All level Completed, Head over to the Train Operator";
+            trainBarrierLevel[2].SetActive(false);
+        }
+    }
+
+
 }
+
