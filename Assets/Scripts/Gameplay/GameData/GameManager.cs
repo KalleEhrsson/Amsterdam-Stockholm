@@ -68,6 +68,11 @@ public class GameManager : MonoBehaviour
         level3statustestobj.SetActive(false);
         UpdateLevel3Status();
     }
+
+    public void itemdropped_in_correct_room()
+    {
+        level2CollectedCount++;
+    }
     public void CollectItem(int level, int itemIndex) 
     {
         switch (level)
