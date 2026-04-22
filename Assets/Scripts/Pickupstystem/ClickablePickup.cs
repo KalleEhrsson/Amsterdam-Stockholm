@@ -5,9 +5,14 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(Collider))]
 public class ClickablePickup : MonoBehaviour, IPointerClickHandler
 {
+    public static ClickablePickup CurrentHovered { get; private set; }
+    public bool HasItemData => GetComponent<ItemData>() != null;
+    
     [Tooltip("Optional reference to the player inventory. If null, will search for one at Start().")]
     public BasicInventory inventory;
 
+    #region Unity Lifecycle
+    
     private void Start()
     {
         if (inventory == null)
@@ -15,7 +20,32 @@ public class ClickablePickup : MonoBehaviour, IPointerClickHandler
             inventory = FindObjectOfType<BasicInventory>();
         }
     }
+    
+    private void OnMouseEnter()
+    {
+        CurrentHovered = this;
+    }
 
+    private void OnMouseExit()
+    {
+        if (CurrentHovered == this)
+        {
+            CurrentHovered = null;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (CurrentHovered == this)
+        {
+            CurrentHovered = null;
+        }
+    }
+
+    #endregion
+
+    #region Pickup
+    
     // Called by Unity when using a physics raycast click (legacy OnMouseDown). Works if object has a Collider.
     private void OnMouseDown()
     {
@@ -42,5 +72,13 @@ public class ClickablePickup : MonoBehaviour, IPointerClickHandler
         {
             Debug.LogWarning($"ClickablePickup: Pickup failed for {gameObject.name}. Ensure ItemData is attached.");
         }
+        
+        if (!HasItemData)
+        {
+            Debug.LogWarning($"ClickablePickup: {gameObject.name} has ClickablePickup but no ItemData.");
+            return;
+        }
     }
+    
+    #endregion
 }

@@ -26,10 +26,14 @@ public class BasicInventory : MonoBehaviour
     public bool useCameraForward = false;
 
     [Tooltip("Key used to drop the last item in inventory")]
-    public KeyCode dropKey = KeyCode.G;
+    public KeyCode dropKey = KeyCode.Q;
 
     [Tooltip("If true the item will be removed from the inventory when dropped. If false the item stays in the list so it can be picked up again.")]
     public bool removeItemOnDrop = false;
+    
+    public bool IsHoldingItem => items.Count > 0;
+    public ClickablePickup CurrentPickupCandidate => ClickablePickup.CurrentHovered;
+    public bool HasPickupCandidate => CurrentPickupCandidate != null && CurrentPickupCandidate.HasItemData;
 
     // Check input for dropping
     private void Update()

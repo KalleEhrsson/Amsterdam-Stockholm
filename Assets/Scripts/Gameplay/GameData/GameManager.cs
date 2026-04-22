@@ -28,6 +28,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Train Barriers")]
     [SerializeField] private GameObject[] trainBarrierLevel;
+    
+    [Header("Room Drop Tracking")]
+    [SerializeField] private int correctRoomDropCount;
 
     void Start()
     {
@@ -73,6 +76,11 @@ public class GameManager : MonoBehaviour
     // =========================
     // UI UPDATE
     // =========================
+    public void itemdropped_in_correct_room()
+    {
+        correctRoomDropCount++;
+    }
+    
     private void UpdateLevelUI(LevelData level, int index)
     {
         if (level.statusText != null)
