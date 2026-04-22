@@ -1,11 +1,25 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum OneShotId
 {
     Jump = 0,
     Land = 1,
+}
+
+public enum AudioCueType
+{
+    Pickup = 0,
+    Drop = 1,
+    Hover = 2,
+    Interact = 3,
+    Denied = 4,
+    Confirm = 5,
+    Cancel = 6,
+    Jump = 100,
+    Land = 101,
 }
 
 [DisallowMultipleComponent]
@@ -15,7 +29,9 @@ public sealed class OneShotAudio : MonoBehaviour
     private struct OneShotEntry
     {
         #region Inspector
-        public OneShotId id;
+        [FormerlySerializedAs("id")]
+        public AudioCueType cue;
+        public string cueId;
         public AudioClip clip;
 
         [Range(0f, 1f)] public float volume;
@@ -31,6 +47,7 @@ public sealed class OneShotAudio : MonoBehaviour
         [SerializeField, HideInInspector] private bool cachedWasSkipEnabled;
 
         public float CachedOffsetSeconds => cachedOffsetSeconds;
+        public string NormalizedCueId => string.IsNullOrWhiteSpace(cueId) ? string.Empty : cueId.Trim();
 
 #if UNITY_EDITOR
         public bool NeedsRebake()
@@ -65,7 +82,14 @@ public sealed class OneShotAudio : MonoBehaviour
 
     [Header("Playback Pool")]
     [SerializeField, Tooltip("How many one-shots can overlap.")]
-    private int poolSize = 4;
+    private int poolSize = 8;
+    
+    [SerializeField, Tooltip("Default spatial blend for regular Play calls. 0 = 2D, 1 = 3D")]
+    [Range(0f, 1f)]
+    private float defaultSpatialBlend = 0f;
+
+    [Header("Diagnostics")]
+    [SerializeField] private bool logMissingCues = true;
 
     [Header("Silence Detection")]
     [SerializeField, Tooltip("Anything below this absolute amplitude counts as silence.")]
@@ -76,7 +100,8 @@ public sealed class OneShotAudio : MonoBehaviour
     #endregion
 
     #region Cached
-    private readonly Dictionary<OneShotId, int> indexMap = new();
+    private readonly Dictionary<AudioCueType, int> cueIndexMap = new();
+    private readonly Dictionary<string, int> cueIdIndexMap = new(StringComparer.OrdinalIgnoreCase);
     private AudioSource[] pool;
     private int poolIndex;
     #endregion
@@ -102,11 +127,60 @@ public sealed class OneShotAudio : MonoBehaviour
     #region Public API
     public void Play(OneShotId id)
     {
+        Play(ToCueType(id));
+    }
+
+    public void Play(AudioCueType cue)
+    {
+        if (!TryGetEntryIndex(cue, out int entryIndex))
+        {
+            LogMissing(cue.ToString());
+            return;
+        }
+
+        PlayFromEntry(entryIndex, defaultSpatialBlend, transform.position);
+    }
+
+    public void Play(string cueId)
+    {
+        if (!TryGetEntryIndex(cueId, out int entryIndex))
+        {
+            LogMissing(cueId);
+            return;
+        }
+
+        PlayFromEntry(entryIndex, defaultSpatialBlend, transform.position);
+    }
+
+    public void PlayAtPosition(AudioCueType cue, Vector3 worldPosition)
+    {
+        if (!TryGetEntryIndex(cue, out int entryIndex))
+        {
+            LogMissing(cue.ToString());
+            return;
+            
+        }
+
+        PlayFromEntry(entryIndex, 1f, worldPosition);
+    }
+
+    public void PlayAtPosition(string cueId, Vector3 worldPosition)
+    {
+        if (!TryGetEntryIndex(cueId, out int entryIndex))
+        {
+            LogMissing(cueId);
+            return;
+        }
+
+        PlayFromEntry(entryIndex, 1f, worldPosition);
+    }
+    #endregion
+
+    #region Playback
+    private void PlayFromEntry(int entryIndex, float spatialBlend, Vector3 worldPosition)
+    {
         if (pool == null || pool.Length == 0)
             BuildPoolIfNeeded();
-
-        if (!indexMap.TryGetValue(id, out int entryIndex))
-            return;
 
         if (entryIndex < 0 || entryIndex >= entries.Count)
             return;
@@ -117,6 +191,8 @@ public sealed class OneShotAudio : MonoBehaviour
             return;
 
         AudioSource s = GetNextSource();
+        s.transform.position = worldPosition;
+        s.spatialBlend = Mathf.Clamp01(spatialBlend);
 
         s.volume = Mathf.Clamp01(e.volume);
 
@@ -126,17 +202,9 @@ public sealed class OneShotAudio : MonoBehaviour
         );
 
         s.pitch = pitch;
-
         s.clip = e.clip;
 
         float offset = e.skipLeadingSilence ? e.CachedOffsetSeconds : 0f;
-
-        #if UNITY_EDITOR
-        Debug.Log(
-            $"[OneShotAudio] Playing '{id}' from offset {offset:0.000}s",
-            this
-        );
-        #endif
 
         offset = Mathf.Clamp(offset, 0f, GetMaxStartTimeSafe(e.clip));
 
@@ -174,9 +242,9 @@ public sealed class OneShotAudio : MonoBehaviour
 
             // Your project is 3D but plays like a sidescroller.
             // Keep it 3D so it follows the player in space.
-            s.spatialBlend = 1f;
             s.dopplerLevel = 0f;
-
+            s.spatialBlend = defaultSpatialBlend;
+            
             pool[i] = s;
         }
 
@@ -199,12 +267,53 @@ public sealed class OneShotAudio : MonoBehaviour
     #endregion
 
     #region Lookup
+    private bool TryGetEntryIndex(AudioCueType cue, out int entryIndex)
+    {
+        return cueIndexMap.TryGetValue(cue, out entryIndex);
+    }
+
+    private bool TryGetEntryIndex(string cueId, out int entryIndex)
+    {
+        entryIndex = -1;
+
+        if (string.IsNullOrWhiteSpace(cueId))
+            return false;
+
+        return cueIdIndexMap.TryGetValue(cueId.Trim(), out entryIndex);
+    }
+    
     private void RebuildIndexMap()
     {
-        indexMap.Clear();
+        cueIndexMap.Clear();
+        cueIdIndexMap.Clear();
 
         for (int i = 0; i < entries.Count; i++)
-            indexMap[entries[i].id] = i;
+        {
+            OneShotEntry entry = entries[i];
+            cueIndexMap[entry.cue] = i;
+
+            string normalizedCueId = entry.NormalizedCueId;
+            if (!string.IsNullOrEmpty(normalizedCueId))
+                cueIdIndexMap[normalizedCueId] = i;
+        }
+    }
+
+    private static AudioCueType ToCueType(OneShotId id)
+    {
+        return id switch
+        {
+            OneShotId.Jump => AudioCueType.Jump,
+            OneShotId.Land => AudioCueType.Land,
+            _ => AudioCueType.Interact,
+        };
+    }
+
+    private void LogMissing(string cueLabel)
+    {
+        if (!logMissingCues)
+            return;
+
+        Debug.LogWarning($"[OneShotAudio] Missing cue '{cueLabel}'.", this);
     }
     #endregion
 
@@ -233,22 +342,7 @@ public sealed class OneShotAudio : MonoBehaviour
             float offset = 0f;
 
             if (e.skipLeadingSilence && e.clip != null)
-            {
                 offset = FindFirstNonSilentTime(e.clip);
-
-                Debug.Log(
-                    $"[OneShotAudio] Cached silence offset for '{e.id}' " +
-                    $"({e.clip.name}): {offset:0.000}s",
-                    this
-                );
-            }
-            else
-            {
-                Debug.Log(
-                    $"[OneShotAudio] No silence skipping for '{e.id}'",
-                    this
-                );
-            }
 
             e.MarkBaked(offset);
             entries[i] = e;
@@ -256,10 +350,7 @@ public sealed class OneShotAudio : MonoBehaviour
         }
 
         if (changed)
-        {
-            // Marks the component dirty so Unity saves the serialized cached offsets.
             UnityEditor.EditorUtility.SetDirty(this);
-        }
     }
     #endregion
 #endif
