@@ -182,7 +182,7 @@ public class HoldRestartController : MonoBehaviour
     
     private static bool IsRestartHeld()
     {
-        bool held = Input.GetKey(KeyCode.R);
+        bool held = Input.GetKey(KeyCode.Delete);
 
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null)
