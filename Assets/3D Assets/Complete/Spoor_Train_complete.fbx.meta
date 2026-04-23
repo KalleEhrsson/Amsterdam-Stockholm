@@ -3,7 +3,257 @@ guid: 818757afe74e16d49a4c3f226dd1adcb
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Ballast
+    second: {fileID: 2100000, guid: 7b77b3ea9a9a0b440978eb005506c902, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black
+    second: {fileID: 2100000, guid: a97f95e3ee4ee0441b1ba07c82f58e8f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black _Rubber_
+    second: {fileID: 2100000, guid: c7619a3031759cb4880b2da7d6f37fc9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black.002
+    second: {fileID: 2100000, guid: 9be3af2aef6abb14eb1ea9c090ac9e80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black.004
+    second: {fileID: 2100000, guid: a464751b5e2b0a6469174c8911a8ae07, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black.005
+    second: {fileID: 2100000, guid: a7b9793c102c0be43999a0793bdf4979, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Bright Red Metal
+    second: {fileID: 2100000, guid: 12685289caf0f9a4ca7b57d3d0945b66, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Green metal
+    second: {fileID: 2100000, guid: 7056c024186555347a4c5226d6b359f6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Green metal.001
+    second: {fileID: 2100000, guid: 57f3c1558b4c2e343be586b273374bfa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Green metal.003
+    second: {fileID: 2100000, guid: bff4c078f68bf8e4494cce5729ac2da8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Light Wood
+    second: {fileID: 2100000, guid: 1be8e5861ac471d4abbb62382a0ac1b1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Light Wood.002
+    second: {fileID: 2100000, guid: 6332bb187de2438448861c584fd9cf88, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Light Wood.004
+    second: {fileID: 2100000, guid: 964af40d894820d4c9ee477ca68b1342, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.001
+    second: {fileID: 2100000, guid: a6bda171a208ce544bfd3a664f8d0e77, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.002
+    second: {fileID: 2100000, guid: eb7e2c500a53f5b4e84331bf43aa9852, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.010
+    second: {fileID: 2100000, guid: 715b4834a9ff7414b8acc5291b1a0808, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.011
+    second: {fileID: 2100000, guid: 490032ca4c4ff60438d2252e9a214be2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.012
+    second: {fileID: 2100000, guid: 86341412155662349892a4454160bef7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.015
+    second: {fileID: 2100000, guid: 25b35fb74a9b83049b65e66d54b50628, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.016
+    second: {fileID: 2100000, guid: 1fa047c7a9c34224f88cc5e49e724e96, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neutral Steel
+    second: {fileID: 2100000, guid: 70dbf5c1c7d6ec2409aff6512d265be6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neutral Steel.001
+    second: {fileID: 2100000, guid: ca6ed5a054845024384995b3c7101f1b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neutral Steel.002
+    second: {fileID: 2100000, guid: 8b986e64cb4c5a742898744327de986c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neutral Steel.003
+    second: {fileID: 2100000, guid: 23715841efacf08439167419b54b9875, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neutral Steel.004
+    second: {fileID: 2100000, guid: afffd2c1b81dee248b992f45c8e07d67, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neutral Steel.005
+    second: {fileID: 2100000, guid: a45d16b7b05e99642a13ae6e4e1cf315, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rail
+    second: {fileID: 2100000, guid: 2b170970493c65a40a43118af8c4f8f8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (Steel)
+    second: {fileID: 2100000, guid: 07f1a2bd8f690a045bd8334d9854c11f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (Steel).001
+    second: {fileID: 2100000, guid: b67afc53a92bd6948b4391c64e295bff, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (Steel).002
+    second: {fileID: 2100000, guid: eed744ced9d336b4f9d3dc5ef68133d4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (Steel).003
+    second: {fileID: 2100000, guid: d374f774fa93d484d94f445b92e179ef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (Steel).005
+    second: {fileID: 2100000, guid: 29cb43dc0c426c148a1a4f3f0ea4e56b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (wood)
+    second: {fileID: 2100000, guid: f31fd9070867eaf468beaf64cafc7bb0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (wood).001
+    second: {fileID: 2100000, guid: c8cadf306bf326c47b4296c01565c653, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (wood).002
+    second: {fileID: 2100000, guid: 9c4743b90d8e2654d8923d14104d7a69, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red (wood).003
+    second: {fileID: 2100000, guid: 3c6ae1d94813a5e469962595e945ed66, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Smooth_Steel
+    second: {fileID: 2100000, guid: e9721998fce050d4ebebde56ec9b042c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Smooth_Steel.001
+    second: {fileID: 2100000, guid: 2302e47e1770d9344a06ce833c8bc1c2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Smooth_Steel.002
+    second: {fileID: 2100000, guid: caddb0953aee938449e12f841569fe66, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Smooth_Steel.003
+    second: {fileID: 2100000, guid: 1b16c5da92da835448223edc54f11dce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Steel
+    second: {fileID: 2100000, guid: 8f15292655a19824881880737b8c6752, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Steel.001
+    second: {fileID: 2100000, guid: 786f22e3404bea34cb4f7daab45d0050, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Steel.002
+    second: {fileID: 2100000, guid: c6097dcd408a36143964b5bf5ead7515, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Steel.003
+    second: {fileID: 2100000, guid: ce3e0a48698820742abbf4bdff2499b4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Steel.004
+    second: {fileID: 2100000, guid: 8ba11787096d426498d041cddcac2bca, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WINDOW
+    second: {fileID: 2100000, guid: 6dcd876bb58823e48bb9e1c164925d5a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: White Metal
+    second: {fileID: 2100000, guid: 16b4e0672dbe40644861a50e0962b699, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood
+    second: {fileID: 2100000, guid: cc2e3cfc480d3dd48a116f3d189eca1c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.002
+    second: {fileID: 2100000, guid: 670f493a6238e184da4a9ad6041a0508, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.003
+    second: {fileID: 2100000, guid: 4a8ec6469db7c404783a98aa34e28e06, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -71,8 +321,8 @@ ModelImporter:
     useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:
-    normalSmoothAngle: 60
-    normalImportMode: 0
+    normalSmoothAngle: 180
+    normalImportMode: 1
     tangentImportMode: 3
     normalCalculationMode: 4
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
