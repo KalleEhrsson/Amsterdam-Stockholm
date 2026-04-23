@@ -67,23 +67,6 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
---- !u!1109 &-6456608507900725824
-AnimatorTransition:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: IsPushing
-    m_EventTreshold: 0
-  m_DstStateMachine: {fileID: 0}
-  m_DstState: {fileID: -1981609661346827728}
-  m_Solo: 0
-  m_Mute: 0
-  m_IsExit: 0
-  serializedVersion: 1
 --- !u!1102 &-6214863102496814476
 AnimatorState:
   serializedVersion: 6
@@ -570,7 +553,6 @@ AnimatorStateMachine:
     - {fileID: -620797091739429739}
     - {fileID: -2252976147681621276}
     - {fileID: -1793880756205783536}
-    - {fileID: -6456608507900725824}
   - first: {fileID: 5914203071028111217}
     second:
     - {fileID: -7791738036282915511}
