@@ -92,6 +92,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!135 &628155100243369255
 SphereCollider:
@@ -127,8 +128,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemDropInCarage
   DroppableItem: {fileID: 9083984415563971838}
-  itemcol: {fileID: 6594647778280017456, guid: 95bda62ae7aa9e848873751b2fd733a0, type: 3}
   gamemanager: {fileID: 7079641593757057406, guid: 028821512b69a0049b93ee0f109f3eb2, type: 3}
+  canvas: {fileID: 0}
 --- !u!114 &2844668234960738111
 MonoBehaviour:
   m_ObjectHideFlags: 0
